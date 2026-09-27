@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 184 72" role="img" aria-labelledby="title">
+  <title id="title">Universiti Malaysia Kelantan</title>
+  <path fill="#ffb13d" d="M15 10h10v31c0 8 4 12 11 12s11-4 11-12V10h10v32c0 14-8 21-21 21S15 56 15 42V10Z"/>
+  <path fill="#ff3b57" d="M67 10h12l12 30 12-30h12v52h-10V30L95 56h-8L77 30v32H67V10Z"/>
+  <path fill="#f5f3ea" d="M125 10h10v21l18-21h13l-21 23 22 29h-13l-16-22-3 4v18h-10V10Z"/>
+  <path stroke="#ff3b57" stroke-width="2" d="M15 68h151"/>
+</svg>
