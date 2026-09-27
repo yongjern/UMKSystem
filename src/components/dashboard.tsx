@@ -1,14 +1,24 @@
 "use client";
 
-import { ArrowUpRight, BookOpen, CalendarDays, Clock3, FileText, GraduationCap, MapPin, MessageCircle, Radio, Sparkles, Video, Wifi } from "lucide-react";
+import { ArrowRight, ArrowUpRight, BookOpen, BusFront, CalendarDays, Clock3, FileText, GraduationCap, MapPin, MessageCircle, MoonStar, Radio, Sparkles, Video, Wifi } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { quickLinks, type QuickLink } from "@/data/links";
+import { busOperatingDays, busRoutes, type BusDirection } from "@/data/bus-schedule";
 import { classSchedule, dayNames, type ClassSession } from "@/data/schedule";
 import type { CalendarEvent } from "@/lib/calendar";
 
 const icons = { book: BookOpen, calendar: CalendarDays, campus: GraduationCap, file: FileText, message: MessageCircle, sparkles: Sparkles, video: Video, wifi: Wifi };
 const timeSlots = Array.from({ length: 14 }, (_, index) => index + 8);
+const courseColors: Record<string, { background: string; accent: string }> = {
+  UBI2022: { background: "#42220b", accent: "#ffb13d" },
+  HTP10103: { background: "#102d37", accent: "#35c2d1" },
+  HFT10103: { background: "#401421", accent: "#ff3b57" },
+  ATF10203: { background: "#2f2045", accent: "#b58cff" },
+  USK10602: { background: "#143326", accent: "#58d68d" },
+  UKS10401: { background: "#3d2912", accent: "#f5cf62" },
+  HFT10403: { background: "#222c51", accent: "#7f9cff" },
+};
 
 function formatHour(hour: number) {
   const wholeHour = Math.floor(hour);
@@ -44,6 +54,38 @@ function countdownLabel(now: Date, start: Date, end: Date) {
   const hours = Math.floor((totalMinutes % 1440) / 60);
   const minutes = totalMinutes % 60;
   return days > 0 ? `IN ${days}D ${hours}H` : `IN ${hours}H ${minutes}M`;
+}
+
+function isTomorrow(now: Date, date: Date) {
+  const tomorrow = new Date(now);
+  tomorrow.setDate(now.getDate() + 1);
+  return tomorrow.toDateString() === date.toDateString();
+}
+
+function getNextBus(now: Date, direction: BusDirection) {
+  const route = busRoutes.find((item) => item.direction === direction) ?? busRoutes[0];
+  for (let dayOffset = 0; dayOffset < 8; dayOffset += 1) {
+    const serviceDate = new Date(now);
+    serviceDate.setDate(now.getDate() + dayOffset);
+    if (!busOperatingDays.includes(serviceDate.getDay() as (typeof busOperatingDays)[number])) continue;
+    for (const departure of route.departures) {
+      const [hours, minutes] = departure.split(":").map(Number);
+      const departureDate = new Date(serviceDate);
+      departureDate.setHours(hours, minutes, 0, 0);
+      if (departureDate > now) return { route, departure, departureDate };
+    }
+  }
+  return null;
+}
+
+function busCountdown(now: Date, departure: Date) {
+  const totalMinutes = Math.max(0, Math.ceil((departure.getTime() - now.getTime()) / 60000));
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor((totalMinutes % 1440) / 60);
+  const minutes = totalMinutes % 60;
+  if (days > 0) return `${days}D ${hours}H`;
+  if (hours > 0) return `${hours}H ${minutes}M`;
+  return `${minutes} MIN`;
 }
 
 function QuickLinkCard({ link }: { link: QuickLink }) {
@@ -83,7 +125,8 @@ function Timetable() {
               const session = sessions.find((item) => item.start === hour);
               if (session) {
                 const span = session.end - session.start;
-                cells.push(<td className={`class-cell ${session.type.toLowerCase()}`} colSpan={span} key={`${day}-${hour}`}><strong>{session.code}</strong><span>{session.group} · {session.mode}</span></td>);
+                const colors = courseColors[session.code];
+                cells.push(<td className="class-cell" style={{ backgroundColor: colors.background, borderLeftColor: colors.accent }} colSpan={span} key={`${day}-${hour}`}><strong>{session.code}</strong><span>{session.group} · {session.mode}</span></td>);
                 hour += span;
               } else {
                 cells.push(<td className="empty-cell" key={`${day}-${hour}`} aria-label={`${day} ${hour}:00 empty`} />);
@@ -95,6 +138,34 @@ function Timetable() {
         </tbody>
       </table>
     </div>
+  );
+}
+
+function BusSchedule({ now }: { now: Date }) {
+  const [direction, setDirection] = useState<BusDirection>("toKampus");
+  const nextBus = getNextBus(now, direction);
+  const activeRoute = busRoutes.find((route) => route.direction === direction) ?? busRoutes[0];
+
+  return (
+    <section className="bus-section" aria-labelledby="bus-title">
+      <div className="section-heading bus-heading">
+        <div><span className="eyebrow">SUNDAY—THURSDAY / SHUTTLE</span><h2 id="bus-title">Kampus Kota bus</h2></div>
+        <div className="route-toggle" aria-label="Bus direction">
+          {busRoutes.map((route) => <button key={route.direction} className={direction === route.direction ? "active" : ""} onClick={() => setDirection(route.direction)}>{route.shortLabel}</button>)}
+        </div>
+      </div>
+      <div className="bus-board">
+        <div className="next-bus-panel">
+          <span className="bus-icon"><BusFront size={25} /></span>
+          <div className="bus-route"><small>NEXT DEPARTURE</small><strong>{activeRoute.from} <ArrowRight size={18} /> {activeRoute.to}</strong></div>
+          <time>{nextBus?.departure ?? "--:--"}<small>{nextBus ? `IN ${busCountdown(now, nextBus.departureDate)}` : "NO SERVICE"}</small></time>
+        </div>
+        <div className="departure-strip">
+          {activeRoute.departures.map((departure) => <span className={nextBus?.departure === departure && nextBus.departureDate.toDateString() === now.toDateString() ? "next" : ""} key={departure}>{departure}</span>)}
+        </div>
+        <p>Service times are based on the UMK schedule issued 11 March 2026 and may change during public holidays.</p>
+      </div>
+    </section>
   );
 }
 
@@ -124,12 +195,14 @@ export function Dashboard() {
   const [now, setNow] = useState<Date | null>(null);
   useEffect(() => { const update = () => setNow(new Date()); update(); const timer = window.setInterval(update, 60000); return () => window.clearInterval(timer); }, []);
   const next = now ? getNextSession(now) : null;
+  const showGoodNight = Boolean(now && next && isTomorrow(now, next.start));
   return (
     <main className="dashboard-shell">
       <header className="site-header"><div className="brand-lockup"><Image src="/logo.svg" alt="Universiti Malaysia Kelantan" width={184} height={72} priority /><div><span>PERSONAL OPERATIONS BOARD</span><h1>My UMK</h1></div></div><div className="live-clock" aria-label="Current date and time"><span><Radio size={12} fill="currentColor" /> LIVE</span><strong>{now ? now.toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit", hour12: false }) : "--:--"}</strong><small>{now ? now.toLocaleDateString("en-MY", { weekday: "long", day: "2-digit", month: "short" }).toUpperCase() : "LOADING"}</small></div></header>
       <div className="signal-divider" aria-hidden="true" />
-      <section className="next-class" aria-labelledby="next-title"><div className="next-status"><span className="eyebrow"><Clock3 size={14} /> NEXT ON SCHEDULE</span><strong>{now && next ? countdownLabel(now, next.start, next.end) : "CALCULATING"}</strong></div><div className="next-main"><span className="day-number">{next ? next.start.getDate().toString().padStart(2, "0") : "--"}</span><div><h2 id="next-title">{next?.session.code ?? "Loading schedule"}</h2><p>{next ? `${next.session.type} · Group ${next.session.group}` : "Semester September · Session 2026/2027"}</p></div></div><div className="next-meta"><span><Clock3 size={15} /> {next ? `${formatHour(next.session.start)}—${formatHour(next.session.end)}` : "--:--"}</span><span><MapPin size={15} /> {next?.session.mode ?? "Checking"}</span></div></section>
+      {showGoodNight ? <section className="next-class good-night" aria-labelledby="next-title"><div className="night-icon"><MoonStar size={38} /></div><div className="next-main"><h2 id="next-title">晚安，明天見。</h2></div></section> : <section className="next-class" aria-labelledby="next-title"><div className="next-status"><span className="eyebrow"><Clock3 size={14} /> NEXT ON SCHEDULE</span><strong>{now && next ? countdownLabel(now, next.start, next.end) : "CALCULATING"}</strong></div><div className="next-main"><span className="day-number">{next ? next.start.getDate().toString().padStart(2, "0") : "--"}</span><div><h2 id="next-title">{next?.session.code ?? "Loading schedule"}</h2><p>{next ? `${next.session.type} · Group ${next.session.group}` : "Semester September · Session 2026/2027"}</p></div></div><div className="next-meta"><span><Clock3 size={15} /> {next ? `${formatHour(next.session.start)}—${formatHour(next.session.end)}` : "--:--"}</span><span><MapPin size={15} /> {next?.session.mode ?? "Checking"}</span></div></section>}
       <div className="schedule-layout"><section className="timetable-section" aria-labelledby="timetable-title"><div className="section-heading"><div><span className="eyebrow">SEMESTER SEPTEMBER · 2026/2027</span><h2 id="timetable-title">Weekly timetable</h2></div><div className="legend"><span className="lecture-dot">LECTURE</span><span className="tutorial-dot">TUTORIAL</span></div></div><Timetable /></section>{now ? <Agenda now={now} /> : null}</div>
+      {now ? <BusSchedule now={now} /> : null}
       <section className="links-section" aria-labelledby="links-title"><div className="section-heading"><div><span className="eyebrow">DIRECTORY / 12 DESTINATIONS</span><h2 id="links-title">Quick access</h2></div><p>Essential campus systems and everyday tools.</p></div><h3>Campus systems</h3><div className="links-grid">{quickLinks.filter((link) => link.category === "campus").map((link) => <QuickLinkCard link={link} key={link.name} />)}</div><h3>Everyday tools</h3><div className="links-grid tools-grid">{quickLinks.filter((link) => link.category === "tools").map((link) => <QuickLinkCard link={link} key={link.name} />)}</div></section>
       <footer><span>UMK PERSONAL DASHBOARD</span><span>SEMESTER 2026/2027</span></footer>
     </main>
