@@ -1,8 +1,8 @@
 "use client";
 
-import { ArrowRight, ArrowUpRight, BookOpen, BusFront, CalendarDays, Clock3, FileText, GraduationCap, MapPin, MessageCircle, MoonStar, Radio, Sparkles, Video, Wifi } from "lucide-react";
+import { ArrowRight, ArrowUpRight, BookOpen, BusFront, CalendarDays, Clock3, FileText, GraduationCap, MapPin, MessageCircle, MoonStar, Plus, Radio, Sparkles, Trash2, Video, Wifi } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { quickLinks, type QuickLink } from "@/data/links";
 import { busOperatingDays, busRoutes, type BusDirection } from "@/data/bus-schedule";
 import { classSchedule, dayNames, type ClassSession } from "@/data/schedule";
@@ -172,20 +172,67 @@ function BusSchedule({ now }: { now: Date }) {
 function Agenda({ now }: { now: Date }) {
   const [view, setView] = useState<"today" | "week">("today");
   const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [customEvents, setCustomEvents] = useState<CalendarEvent[]>([]);
   const [source, setSource] = useState<"google" | "seed">("seed");
+  const [title, setTitle] = useState("");
+  const [dateTime, setDateTime] = useState("");
+  const [location, setLocation] = useState("");
   useEffect(() => {
     fetch("/api/calendar").then((response) => response.json()).then((data: { events?: CalendarEvent[]; source?: "google" | "seed" }) => {
       if (data.events?.length) setEvents(data.events);
       if (data.source) setSource(data.source);
     }).catch(() => setSource("seed"));
+    try {
+      const savedEvents = window.localStorage.getItem("umk-custom-events");
+      if (savedEvents) setCustomEvents(JSON.parse(savedEvents) as CalendarEvent[]);
+    } catch {
+      setCustomEvents([]);
+    }
   }, []);
+
+  function saveCustomEvents(nextEvents: CalendarEvent[]) {
+    setCustomEvents(nextEvents);
+    window.localStorage.setItem("umk-custom-events", JSON.stringify(nextEvents));
+  }
+
+  function addCustomEvent(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!title.trim() || !dateTime) return;
+    const start = new Date(dateTime).toISOString();
+    saveCustomEvents([...customEvents, {
+      id: `custom-${crypto.randomUUID()}`,
+      title: title.trim(),
+      location: location.trim() || "No location",
+      start,
+      end: start,
+      allDay: false,
+    }]);
+    setTitle("");
+    setDateTime("");
+    setLocation("");
+  }
+
+  function removeCustomEvent(id: string) {
+    saveCustomEvents(customEvents.filter((event) => event.id !== id));
+  }
+
   const seedEvents = classSchedule.filter((session) => view === "week" || session.day === now.getDay()).map((session) => ({ id: `${session.day}-${session.start}-${session.code}`, title: session.code, location: session.mode, start: sessionDate(session, now).toISOString(), end: "", allDay: false }));
-  const visibleEvents = (source === "google" ? events : seedEvents).filter((event) => view === "week" || new Date(event.start).toDateString() === now.toDateString()).slice(0, 6);
+  const weekEnd = new Date(now);
+  weekEnd.setDate(now.getDate() + 7);
+  const visibleEvents = [...(source === "google" ? events : seedEvents), ...customEvents]
+    .filter((event) => view === "today" ? new Date(event.start).toDateString() === now.toDateString() : new Date(event.start) >= now && new Date(event.start) < weekEnd)
+    .sort((first, second) => new Date(first.start).getTime() - new Date(second.start).getTime());
   return (
     <section className="agenda" aria-labelledby="agenda-title">
       <div className="section-heading compact"><div><span className="eyebrow">AGENDA / {source === "google" ? "GOOGLE SYNC" : "LOCAL SCHEDULE"}</span><h2 id="agenda-title">Schedule view</h2></div><div className="view-toggle" aria-label="Agenda range"><button className={view === "today" ? "active" : ""} onClick={() => setView("today")}>TODAY</button><button className={view === "week" ? "active" : ""} onClick={() => setView("week")}>WEEK</button></div></div>
+      <form className="event-form" onSubmit={addCustomEvent}>
+        <label><span>EVENT</span><input type="text" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Event title" required /></label>
+        <label><span>DATE & TIME</span><input type="datetime-local" value={dateTime} onChange={(event) => setDateTime(event.target.value)} required /></label>
+        <label><span>LOCATION</span><input type="text" value={location} onChange={(event) => setLocation(event.target.value)} placeholder="Optional" /></label>
+        <button type="submit" title="Add event"><Plus size={18} /><span>ADD EVENT</span></button>
+      </form>
       <div className="agenda-list">
-        {visibleEvents.length ? visibleEvents.map((event) => { const start = new Date(event.start); return <div className="agenda-row" key={event.id}><time>{start.toLocaleDateString("en-MY", { weekday: "short" })}<strong>{start.toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit", hour12: false })}</strong></time><span><strong>{event.title}</strong><small><MapPin size={13} /> {event.location}</small></span></div>; }) : <p className="empty-agenda">No events scheduled for today.</p>}
+        {visibleEvents.length ? visibleEvents.map((event) => { const start = new Date(event.start); const isCustom = event.id.startsWith("custom-"); return <div className="agenda-row" key={event.id}><time>{start.toLocaleDateString("en-MY", { weekday: "short" })}<strong>{start.toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit", hour12: false })}</strong></time><span><strong>{event.title}</strong><small><MapPin size={13} /> {event.location}</small></span>{isCustom ? <button className="delete-event" onClick={() => removeCustomEvent(event.id)} title="Delete event" aria-label={`Delete ${event.title}`}><Trash2 size={15} /></button> : null}</div>; }) : <p className="empty-agenda">No events scheduled for this view.</p>}
       </div>
     </section>
   );
@@ -193,12 +240,12 @@ function Agenda({ now }: { now: Date }) {
 
 export function Dashboard() {
   const [now, setNow] = useState<Date | null>(null);
-  useEffect(() => { const update = () => setNow(new Date()); update(); const timer = window.setInterval(update, 60000); return () => window.clearInterval(timer); }, []);
+  useEffect(() => { const update = () => setNow(new Date()); update(); const timer = window.setInterval(update, 1000); return () => window.clearInterval(timer); }, []);
   const next = now ? getNextSession(now) : null;
   const showGoodNight = Boolean(now && next && isTomorrow(now, next.start));
   return (
     <main className="dashboard-shell">
-      <header className="site-header"><div className="brand-lockup"><Image src="/logo.svg" alt="Universiti Malaysia Kelantan" width={184} height={72} priority /><div><span>PERSONAL OPERATIONS BOARD</span><h1>My UMK</h1></div></div><div className="live-clock" aria-label="Current date and time"><span><Radio size={12} fill="currentColor" /> LIVE</span><strong>{now ? now.toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit", hour12: false }) : "--:--"}</strong><small>{now ? now.toLocaleDateString("en-MY", { weekday: "long", day: "2-digit", month: "short" }).toUpperCase() : "LOADING"}</small></div></header>
+      <header className="site-header"><div className="brand-lockup"><Image src="/logo.svg" alt="Universiti Malaysia Kelantan" width={184} height={72} priority /><div><span>PERSONAL OPERATIONS BOARD</span><h1>My UMK</h1></div></div><div className="live-clock" aria-label="Current date and time"><span><Radio size={12} fill="currentColor" /> LIVE</span><strong>{now ? now.toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }) : "--:--:--"}</strong><small>{now ? now.toLocaleDateString("en-MY", { weekday: "long", day: "2-digit", month: "short" }).toUpperCase() : "LOADING"}</small></div></header>
       <div className="signal-divider" aria-hidden="true" />
       {showGoodNight ? <section className="next-class good-night" aria-labelledby="next-title"><div className="night-icon"><MoonStar size={38} /></div><div className="next-main"><h2 id="next-title">晚安，明天見。</h2></div></section> : <section className="next-class" aria-labelledby="next-title"><div className="next-status"><span className="eyebrow"><Clock3 size={14} /> NEXT ON SCHEDULE</span><strong>{now && next ? countdownLabel(now, next.start, next.end) : "CALCULATING"}</strong></div><div className="next-main"><span className="day-number">{next ? next.start.getDate().toString().padStart(2, "0") : "--"}</span><div><h2 id="next-title">{next?.session.code ?? "Loading schedule"}</h2><p>{next ? `${next.session.type} · Group ${next.session.group}` : "Semester September · Session 2026/2027"}</p></div></div><div className="next-meta"><span><Clock3 size={15} /> {next ? `${formatHour(next.session.start)}—${formatHour(next.session.end)}` : "--:--"}</span><span><MapPin size={15} /> {next?.session.mode ?? "Checking"}</span></div></section>}
       <div className="schedule-layout"><section className="timetable-section" aria-labelledby="timetable-title"><div className="section-heading"><div><span className="eyebrow">SEMESTER SEPTEMBER · 2026/2027</span><h2 id="timetable-title">Weekly timetable</h2></div><div className="legend"><span className="lecture-dot">LECTURE</span><span className="tutorial-dot">TUTORIAL</span></div></div><Timetable /></section>{now ? <Agenda now={now} /> : null}</div>
