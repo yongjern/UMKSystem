@@ -1,4 +1,5 @@
-import { calendar_v3, google } from "@googleapis/calendar";
+import { calendar, calendar_v3 } from "@googleapis/calendar";
+import { OAuth2Client } from "google-auth-library";
 
 export type CalendarEvent = {
   id: string;
@@ -34,15 +35,15 @@ export async function getCalendarEvents(): Promise<CalendarEvent[]> {
     throw new Error("Google Calendar credentials are not configured.");
   }
 
-  const auth = new google.auth.OAuth2(clientId, clientSecret);
+  const auth = new OAuth2Client(clientId, clientSecret);
   auth.setCredentials({ refresh_token: refreshToken });
 
-  const calendar = google.calendar({ version: "v3", auth });
+  const calendarClient = calendar({ version: "v3", auth });
   const now = new Date();
   const weekEnd = new Date(now);
   weekEnd.setDate(now.getDate() + 8);
 
-  const response = await calendar.events.list({
+  const response = await calendarClient.events.list({
     calendarId: process.env.GOOGLE_CALENDAR_ID ?? "primary",
     timeMin: now.toISOString(),
     timeMax: weekEnd.toISOString(),
