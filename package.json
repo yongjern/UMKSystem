@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@googleapis/calendar": "^10.0.0",
-    "google-auth-library": "^10.0.0",
+    "google-auth-library": "10.5.0",
     "lucide-react": "^0.468.0",
     "next": "^16.0.0",
     "react": "^19.0.0",
@@ -25,5 +25,8 @@
     "eslint-config-next": "^16.0.0",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.7.0"
+  },
+  "overrides": {
+    "google-auth-library": "10.5.0"
   }
 }
