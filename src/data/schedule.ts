@@ -39,12 +39,20 @@ export const courseLinks: Record<string, Partial<Record<SessionType, string>>> =
     Lecture: "https://ecampus.umk.edu.my/course/view.php?id=111127392",
     Tutorial: "https://ecampus.umk.edu.my/course/view.php?id=111127393",
   },
+  UBI2022: {
+    Lecture: "https://ecampus.umk.edu.my/course/view.php?id=111128263",
+  },
   UKS10401: {
     Lecture: "https://ecampus.umk.edu.my/course/view.php?id=111128565",
   },
   USK10602: {
     Lecture: "https://ecampus.umk.edu.my/course/view.php?id=111128828",
   },
+};
+
+export const courseMeetLinks: Partial<Record<string, string>> = {
+  ATF10203: "https://meet.google.com/cxf-dvjn-wtt",
+  USK10602: "https://meet.google.com/gkf-qori-fjy",
 };
 
 export const classSchedule: ClassSession[] = [
