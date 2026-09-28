@@ -12,6 +12,16 @@ export type ClassSession = {
 
 export const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 
+export const courseNames: Record<string, string> = {
+  ATF10203: "ASAS KEUSAHAWANAN",
+  HFT10103: "ASAS PENGURUSAN",
+  HFT10403: "PRINSIP EKONOMI",
+  HTP10103: "PENGENALAN KEPADA INDUSTRI KEUSAHAWANAN PELANCONGAN",
+  UBI2022: "BAHASA INGGERIS DALAM KOMUNIKASI PERNIAGAAN",
+  UKS10401: "BADMINTON",
+  USK10602: "FALSAFAH DAN CABARAN SEMASA",
+};
+
 export const classSchedule: ClassSession[] = [
   { day: 0, start: 8, end: 10, code: "UBI2022", group: "PC20", type: "Lecture", mode: "Online 10K" },
   { day: 0, start: 10, end: 11, code: "HTP10103", group: "L1T1", type: "Tutorial", mode: "Online 1K" },

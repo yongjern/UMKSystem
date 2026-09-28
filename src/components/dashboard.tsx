@@ -5,7 +5,8 @@ import Image from "next/image";
 import { type FormEvent, useEffect, useState } from "react";
 import { quickLinks, type QuickLink } from "@/data/links";
 import { busOperatingDays, busRoutes, type BusDirection } from "@/data/bus-schedule";
-import { classSchedule, dayNames, type ClassSession } from "@/data/schedule";
+import { classSchedule, courseNames, dayNames, type ClassSession } from "@/data/schedule";
+import { addCustomEvent as addEventToDatabase, deleteCustomEvent, getCustomEvents, migrateLegacyEvents } from "@/lib/event-database";
 import type { CalendarEvent } from "@/lib/calendar";
 
 const icons = { book: BookOpen, calendar: CalendarDays, campus: GraduationCap, file: FileText, message: MessageCircle, sparkles: Sparkles, video: Video, wifi: Wifi };
@@ -110,9 +111,13 @@ function QuickLinkCard({ link }: { link: QuickLink }) {
   );
 }
 
-function Timetable() {
+function Timetable({ now }: { now: Date }) {
+  const currentHour = now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
+  const showTimeLine = currentHour >= 8 && currentHour < 22;
+  const linePosition = 7.5 + ((currentHour - 8) / 14) * 92.5;
   return (
     <div className="timetable-scroll">
+      <div className="timetable-canvas">
       <table className="timetable">
         <colgroup><col className="day-column" />{timeSlots.map((hour) => <col key={hour} className="time-column" />)}</colgroup>
         <thead><tr><th scope="col">DAY</th>{timeSlots.map((hour) => <th scope="col" key={hour}>{hour.toString().padStart(2, "0")}</th>)}</tr></thead>
@@ -126,17 +131,19 @@ function Timetable() {
               if (session) {
                 const span = session.end - session.start;
                 const colors = courseColors[session.code];
-                cells.push(<td className="class-cell" style={{ backgroundColor: colors.background, borderLeftColor: colors.accent }} colSpan={span} key={`${day}-${hour}`}><strong>{session.code}</strong><span>{session.group} · {session.mode}</span></td>);
+                cells.push(<td className="class-cell" style={{ backgroundColor: colors.background, borderLeftColor: colors.accent }} colSpan={span} key={`${day}-${hour}`}><strong>{session.code}</strong><span>{session.group} · {session.mode}</span><span className="course-tooltip" role="tooltip"><strong>{courseNames[session.code]}</strong><span>{session.code} · {session.type}</span><span>Group {session.group}</span><span>{formatHour(session.start)}—{formatHour(session.end)} · {session.mode}</span></span></td>);
                 hour += span;
               } else {
                 cells.push(<td className="empty-cell" key={`${day}-${hour}`} aria-label={`${day} ${hour}:00 empty`} />);
                 hour += 1;
               }
             }
-            return <tr key={day}><th scope="row">{day.toUpperCase()}</th>{cells}</tr>;
+            return <tr className={dayIndex === now.getDay() ? "today-row" : ""} key={day}><th scope="row">{day.toUpperCase()}</th>{cells}</tr>;
           })}
         </tbody>
       </table>
+      {showTimeLine ? <div className="current-time-line" style={{ left: `${linePosition}%` }} aria-label={`Current time ${formatHour(currentHour)}`}><span>{formatHour(currentHour)}</span></div> : null}
+      </div>
     </div>
   );
 }
@@ -176,44 +183,51 @@ function Agenda({ now }: { now: Date }) {
   const [source, setSource] = useState<"google" | "seed">("seed");
   const [title, setTitle] = useState("");
   const [dateTime, setDateTime] = useState("");
+  const [endDateTime, setEndDateTime] = useState("");
   const [location, setLocation] = useState("");
   useEffect(() => {
     fetch("/api/calendar").then((response) => response.json()).then((data: { events?: CalendarEvent[]; source?: "google" | "seed" }) => {
       if (data.events?.length) setEvents(data.events);
       if (data.source) setSource(data.source);
     }).catch(() => setSource("seed"));
-    try {
-      const savedEvents = window.localStorage.getItem("umk-custom-events");
-      if (savedEvents) setCustomEvents(JSON.parse(savedEvents) as CalendarEvent[]);
-    } catch {
-      setCustomEvents([]);
-    }
+    const loadEvents = async () => {
+      try {
+        await migrateLegacyEvents();
+        setCustomEvents(await getCustomEvents());
+      } catch {
+        setCustomEvents([]);
+      }
+    };
+    void loadEvents();
+    const cleanupTimer = window.setInterval(() => void loadEvents(), 60000);
+    return () => window.clearInterval(cleanupTimer);
   }, []);
 
-  function saveCustomEvents(nextEvents: CalendarEvent[]) {
-    setCustomEvents(nextEvents);
-    window.localStorage.setItem("umk-custom-events", JSON.stringify(nextEvents));
-  }
-
-  function addCustomEvent(event: FormEvent<HTMLFormElement>) {
+  async function addCustomEvent(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!title.trim() || !dateTime) return;
+    if (!title.trim() || !dateTime || !endDateTime) return;
     const start = new Date(dateTime).toISOString();
-    saveCustomEvents([...customEvents, {
+    const end = new Date(endDateTime).toISOString();
+    if (new Date(end) <= new Date(start)) return;
+    const customEvent: CalendarEvent = {
       id: `custom-${crypto.randomUUID()}`,
       title: title.trim(),
       location: location.trim() || "No location",
       start,
-      end: start,
+      end,
       allDay: false,
-    }]);
+    };
+    await addEventToDatabase(customEvent);
+    setCustomEvents((currentEvents) => [...currentEvents, customEvent]);
     setTitle("");
     setDateTime("");
+    setEndDateTime("");
     setLocation("");
   }
 
-  function removeCustomEvent(id: string) {
-    saveCustomEvents(customEvents.filter((event) => event.id !== id));
+  async function removeCustomEvent(id: string) {
+    await deleteCustomEvent(id);
+    setCustomEvents((currentEvents) => currentEvents.filter((event) => event.id !== id));
   }
 
   const seedEvents = classSchedule.filter((session) => view === "week" || session.day === now.getDay()).map((session) => ({ id: `${session.day}-${session.start}-${session.code}`, title: session.code, location: session.mode, start: sessionDate(session, now).toISOString(), end: "", allDay: false }));
@@ -227,7 +241,8 @@ function Agenda({ now }: { now: Date }) {
       <div className="section-heading compact"><div><span className="eyebrow">AGENDA / {source === "google" ? "GOOGLE SYNC" : "LOCAL SCHEDULE"}</span><h2 id="agenda-title">Schedule view</h2></div><div className="view-toggle" aria-label="Agenda range"><button className={view === "today" ? "active" : ""} onClick={() => setView("today")}>TODAY</button><button className={view === "week" ? "active" : ""} onClick={() => setView("week")}>WEEK</button></div></div>
       <form className="event-form" onSubmit={addCustomEvent}>
         <label><span>EVENT</span><input type="text" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Event title" required /></label>
-        <label><span>DATE & TIME</span><input type="datetime-local" value={dateTime} onChange={(event) => setDateTime(event.target.value)} required /></label>
+        <label><span>START</span><input type="datetime-local" value={dateTime} onChange={(event) => setDateTime(event.target.value)} required /></label>
+        <label><span>END</span><input type="datetime-local" min={dateTime} value={endDateTime} onChange={(event) => setEndDateTime(event.target.value)} required /></label>
         <label><span>LOCATION</span><input type="text" value={location} onChange={(event) => setLocation(event.target.value)} placeholder="Optional" /></label>
         <button type="submit" title="Add event"><Plus size={18} /><span>ADD EVENT</span></button>
       </form>
@@ -248,7 +263,7 @@ export function Dashboard() {
       <header className="site-header"><div className="brand-lockup"><Image src="/logo.svg" alt="Universiti Malaysia Kelantan" width={184} height={72} priority /><div><span>PERSONAL OPERATIONS BOARD</span><h1>My UMK</h1></div></div><div className="live-clock" aria-label="Current date and time"><span><Radio size={12} fill="currentColor" /> LIVE</span><strong>{now ? now.toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }) : "--:--:--"}</strong><small>{now ? now.toLocaleDateString("en-MY", { weekday: "long", day: "2-digit", month: "short" }).toUpperCase() : "LOADING"}</small></div></header>
       <div className="signal-divider" aria-hidden="true" />
       {showGoodNight ? <section className="next-class good-night" aria-labelledby="next-title"><div className="night-icon"><MoonStar size={38} /></div><div className="next-main"><h2 id="next-title">晚安，明天見。</h2></div></section> : <section className="next-class" aria-labelledby="next-title"><div className="next-status"><span className="eyebrow"><Clock3 size={14} /> NEXT ON SCHEDULE</span><strong>{now && next ? countdownLabel(now, next.start, next.end) : "CALCULATING"}</strong></div><div className="next-main"><span className="day-number">{next ? next.start.getDate().toString().padStart(2, "0") : "--"}</span><div><h2 id="next-title">{next?.session.code ?? "Loading schedule"}</h2><p>{next ? `${next.session.type} · Group ${next.session.group}` : "Semester September · Session 2026/2027"}</p></div></div><div className="next-meta"><span><Clock3 size={15} /> {next ? `${formatHour(next.session.start)}—${formatHour(next.session.end)}` : "--:--"}</span><span><MapPin size={15} /> {next?.session.mode ?? "Checking"}</span></div></section>}
-      <div className="schedule-layout"><section className="timetable-section" aria-labelledby="timetable-title"><div className="section-heading"><div><span className="eyebrow">SEMESTER SEPTEMBER · 2026/2027</span><h2 id="timetable-title">Weekly timetable</h2></div><div className="legend"><span className="lecture-dot">LECTURE</span><span className="tutorial-dot">TUTORIAL</span></div></div><Timetable /></section>{now ? <Agenda now={now} /> : null}</div>
+      <div className="schedule-layout"><section className="timetable-section" aria-labelledby="timetable-title"><div className="section-heading"><div><span className="eyebrow">SEMESTER SEPTEMBER · 2026/2027</span><h2 id="timetable-title">Weekly timetable</h2></div><div className="legend"><span className="lecture-dot">LECTURE</span><span className="tutorial-dot">TUTORIAL</span></div></div>{now ? <Timetable now={now} /> : null}</section>{now ? <Agenda now={now} /> : null}</div>
       {now ? <BusSchedule now={now} /> : null}
       <section className="links-section" aria-labelledby="links-title"><div className="section-heading"><div><span className="eyebrow">DIRECTORY / 12 DESTINATIONS</span><h2 id="links-title">Quick access</h2></div><p>Essential campus systems and everyday tools.</p></div><h3>Campus systems</h3><div className="links-grid">{quickLinks.filter((link) => link.category === "campus").map((link) => <QuickLinkCard link={link} key={link.name} />)}</div><h3>Everyday tools</h3><div className="links-grid tools-grid">{quickLinks.filter((link) => link.category === "tools").map((link) => <QuickLinkCard link={link} key={link.name} />)}</div></section>
       <footer><span>UMK PERSONAL DASHBOARD</span><span>SEMESTER 2026/2027</span></footer>
