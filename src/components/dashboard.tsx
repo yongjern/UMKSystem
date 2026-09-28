@@ -1,13 +1,13 @@
 "use client";
 
-import { ArrowRight, ArrowUpRight, Bell, BellRing, BookOpen, BusFront, CalendarDays, ClipboardList, Clock3, Download, ExternalLink, FileText, GraduationCap, MapPin, MessageCircle, MoonStar, Plus, Radio, Sparkles, Trash2, Video, Wifi } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Bell, BellRing, BookOpen, BusFront, CalendarDays, Check, ClipboardList, Clock3, Download, ExternalLink, FileText, GraduationCap, MapPin, MessageCircle, MoonStar, Plus, Radio, Sparkles, Trash2, Video, Wifi } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { type FormEvent, useEffect, useState } from "react";
 import { quickLinks, type QuickLink } from "@/data/links";
 import { busOperatingDays, busRoutes, type BusDirection } from "@/data/bus-schedule";
 import { classSchedule, courseLinks, courseMeetLinks, courseNames, dayNames, type ClassSession } from "@/data/schedule";
-import { addCustomEvent as addEventToDatabase, deleteCustomEvent, getCustomEvents, migrateLegacyEvents } from "@/lib/event-database";
+import { addCustomEvent as addEventToDatabase, deleteCustomEvent, getCustomEvents, getPlannerItems, migrateLegacyEvents, savePlannerItem, type PlannerItem } from "@/lib/event-database";
 import type { CalendarEvent } from "@/lib/calendar";
 
 const icons = { book: BookOpen, calendar: CalendarDays, campus: GraduationCap, file: FileText, message: MessageCircle, sparkles: Sparkles, video: Video, wifi: Wifi };
@@ -216,6 +216,7 @@ function Agenda({ now }: { now: Date }) {
   const [view, setView] = useState<"today" | "week">("today");
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [customEvents, setCustomEvents] = useState<CalendarEvent[]>([]);
+  const [plannerItems, setPlannerItems] = useState<PlannerItem[]>([]);
   const [source, setSource] = useState<"google" | "seed">("seed");
   const [title, setTitle] = useState("");
   const [dateTime, setDateTime] = useState("");
@@ -230,8 +231,10 @@ function Agenda({ now }: { now: Date }) {
       try {
         await migrateLegacyEvents();
         setCustomEvents(await getCustomEvents());
+        setPlannerItems(await getPlannerItems());
       } catch {
         setCustomEvents([]);
+        setPlannerItems([]);
       }
     };
     void loadEvents();
@@ -266,12 +269,19 @@ function Agenda({ now }: { now: Date }) {
     setCustomEvents((currentEvents) => currentEvents.filter((event) => event.id !== id));
   }
 
+  async function completePlannerItem(item: PlannerItem) {
+    const completedItem = { ...item, completed: true };
+    await savePlannerItem(completedItem);
+    setPlannerItems((currentItems) => currentItems.map((currentItem) => currentItem.id === item.id ? completedItem : currentItem));
+  }
+
   const seedEvents = classSchedule.filter((session) => view === "week" || session.day === now.getDay()).map((session) => ({ id: `${session.day}-${session.start}-${session.code}`, title: session.code, location: session.mode, start: sessionDate(session, now).toISOString(), end: "", allDay: false }));
   const weekEnd = new Date(now);
   weekEnd.setDate(now.getDate() + 7);
   const visibleEvents = [...(source === "google" ? events : seedEvents), ...customEvents]
     .filter((event) => view === "today" ? new Date(event.start).toDateString() === now.toDateString() : new Date(event.start) >= now && new Date(event.start) < weekEnd)
     .sort((first, second) => new Date(first.start).getTime() - new Date(second.start).getTime());
+  const visiblePlannerItems = plannerItems.filter((item) => !item.completed);
   return (
     <section className="agenda" aria-labelledby="agenda-title">
       <div className="section-heading compact"><div><span className="eyebrow">AGENDA / {source === "google" ? "GOOGLE SYNC" : "LOCAL SCHEDULE"}</span><h2 id="agenda-title">Schedule view</h2></div><div className="view-toggle" aria-label="Agenda range"><button className={view === "today" ? "active" : ""} onClick={() => setView("today")}>TODAY</button><button className={view === "week" ? "active" : ""} onClick={() => setView("week")}>WEEK</button></div></div>
@@ -284,6 +294,10 @@ function Agenda({ now }: { now: Date }) {
       </form>
       <div className="agenda-list">
         {visibleEvents.length ? visibleEvents.map((event) => { const start = new Date(event.start); const isCustom = event.id.startsWith("custom-"); return <div className="agenda-row" key={event.id}><time>{start.toLocaleDateString("en-MY", { weekday: "short" })}<strong>{start.toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit", hour12: false })}</strong></time><span><strong>{event.title}</strong><small><MapPin size={13} /> {event.location}</small></span>{isCustom ? <button className="delete-event" onClick={() => removeCustomEvent(event.id)} title="Delete event" aria-label={`Delete ${event.title}`}><Trash2 size={15} /></button> : null}</div>; }) : <p className="empty-agenda">No events scheduled for this view.</p>}
+      </div>
+      <div className="agenda-planner">
+        <div className="agenda-planner-heading"><span><ClipboardList size={15} /> PLANNER</span><Link href="/planner">MANAGE <ArrowRight size={13} /></Link></div>
+        {visiblePlannerItems.length ? visiblePlannerItems.map((item) => { const dueAt = new Date(item.dueAt); return <div className={`agenda-planner-row${dueAt <= now ? " overdue" : ""}`} key={item.id}><button onClick={() => void completePlannerItem(item)} aria-label={`Complete ${item.title}`} title="Mark complete"><Check size={14} /></button><span><small>{item.kind.toUpperCase()} · {item.courseCode}</small><strong>{item.title}</strong></span><time dateTime={item.dueAt}>{dueAt.toLocaleDateString("en-MY", { day: "2-digit", month: "short" })}<strong>{dueAt.toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit", hour12: false })}</strong></time></div>; }) : <p className="empty-planner-agenda">No open planner deadlines.</p>}
       </div>
     </section>
   );
