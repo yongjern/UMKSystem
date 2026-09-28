@@ -5,7 +5,7 @@ import Image from "next/image";
 import { type FormEvent, useEffect, useState } from "react";
 import { quickLinks, type QuickLink } from "@/data/links";
 import { busOperatingDays, busRoutes, type BusDirection } from "@/data/bus-schedule";
-import { classSchedule, courseNames, dayNames, type ClassSession } from "@/data/schedule";
+import { classSchedule, courseLinks, courseNames, dayNames, type ClassSession } from "@/data/schedule";
 import { addCustomEvent as addEventToDatabase, deleteCustomEvent, getCustomEvents, migrateLegacyEvents } from "@/lib/event-database";
 import type { CalendarEvent } from "@/lib/calendar";
 
@@ -113,6 +113,7 @@ function QuickLinkCard({ link }: { link: QuickLink }) {
 
 function Timetable({ now }: { now: Date }) {
   const [selectedSession, setSelectedSession] = useState<ClassSession | null>(null);
+  const selectedCourseLink = selectedSession ? courseLinks[selectedSession.code]?.[selectedSession.type] : undefined;
   const currentHour = now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
   const showTimeLine = currentHour >= 8 && currentHour < 22;
   const linePosition = 7.5 + ((currentHour - 8) / 14) * 92.5;
@@ -148,7 +149,7 @@ function Timetable({ now }: { now: Date }) {
         </div>
       </div>
       <div className={`course-details${selectedSession ? " active" : ""}`} aria-live="polite">
-        {selectedSession ? <><div><span className="eyebrow">{selectedSession.code} / {selectedSession.type.toUpperCase()}</span><strong>{courseNames[selectedSession.code]}</strong></div><dl><div><dt>GROUP</dt><dd>{selectedSession.group}</dd></div><div><dt>TIME</dt><dd>{formatHour(selectedSession.start)}—{formatHour(selectedSession.end)}</dd></div><div><dt>LOCATION</dt><dd>{selectedSession.mode}</dd></div></dl></> : <p>Hover, focus, or tap a class to view its details.</p>}
+        {selectedSession ? <><div><span className="eyebrow">{selectedSession.code} / {selectedSession.type.toUpperCase()}</span><strong>{courseNames[selectedSession.code]}</strong></div><dl><div><dt>GROUP</dt><dd>{selectedSession.group}</dd></div><div><dt>TIME</dt><dd>{formatHour(selectedSession.start)}—{formatHour(selectedSession.end)}</dd></div><div><dt>LOCATION</dt><dd>{selectedSession.mode}</dd></div></dl>{selectedCourseLink ? <a className="course-link" href={selectedCourseLink} target="_blank" rel="noreferrer">E-CAMPUS <ArrowUpRight size={15} /></a> : null}</> : <p>Hover, focus, or tap a class to view its details.</p>}
       </div>
     </div>
   );
@@ -264,7 +265,7 @@ export function Dashboard() {
   const showGoodNight = Boolean(now && next && isTomorrow(now, next.start));
   return (
     <main className="dashboard-shell">
-      <header className="site-header"><div className="brand-lockup"><Image src="/logo.svg" alt="Universiti Malaysia Kelantan" width={184} height={72} priority /><div><span>PERSONAL OPERATIONS BOARD</span><h1>My UMK</h1></div></div><div className="live-clock" aria-label="Current date and time"><span><Radio size={12} fill="currentColor" /> LIVE</span><strong>{now ? now.toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }) : "--:--:--"}</strong><small>{now ? now.toLocaleDateString("en-MY", { weekday: "long", day: "2-digit", month: "short" }).toUpperCase() : "LOADING"}</small></div></header>
+      <header className="site-header"><div className="brand-lockup"><Image src="https://corporate.umk.edu.my/download/logo%20UMK%20(Menegak)_1bu43dewg9ja8.png" alt="Universiti Malaysia Kelantan" width={596} height={843} priority unoptimized /><div><span>PERSONAL OPERATIONS BOARD</span><h1>My UMK</h1></div></div><div className="live-clock" aria-label="Current date and time"><span><Radio size={12} fill="currentColor" /> LIVE</span><strong>{now ? now.toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }) : "--:--:--"}</strong><small>{now ? now.toLocaleDateString("en-MY", { weekday: "long", day: "2-digit", month: "short" }).toUpperCase() : "LOADING"}</small></div></header>
       <div className="signal-divider" aria-hidden="true" />
       {showGoodNight ? <section className="next-class good-night" aria-labelledby="next-title"><div className="night-icon"><MoonStar size={38} /></div><div className="next-main"><h2 id="next-title">晚安，明天見。</h2></div></section> : <section className="next-class" aria-labelledby="next-title"><div className="next-status"><span className="eyebrow"><Clock3 size={14} /> NEXT ON SCHEDULE</span><strong>{now && next ? countdownLabel(now, next.start, next.end) : "CALCULATING"}</strong></div><div className="next-main"><span className="day-number">{next ? next.start.getDate().toString().padStart(2, "0") : "--"}</span><div><h2 id="next-title">{next?.session.code ?? "Loading schedule"}</h2><p>{next ? `${next.session.type} · Group ${next.session.group}` : "Semester September · Session 2026/2027"}</p></div></div><div className="next-meta"><span><Clock3 size={15} /> {next ? `${formatHour(next.session.start)}—${formatHour(next.session.end)}` : "--:--"}</span><span><MapPin size={15} /> {next?.session.mode ?? "Checking"}</span></div></section>}
       <div className="schedule-layout"><section className="timetable-section" aria-labelledby="timetable-title"><div className="section-heading"><div><span className="eyebrow">SEMESTER SEPTEMBER · 2026/2027</span><h2 id="timetable-title">Weekly timetable</h2></div><div className="legend"><span className="lecture-dot">LECTURE</span><span className="tutorial-dot">TUTORIAL</span></div></div>{now ? <Timetable now={now} /> : null}</section>{now ? <Agenda now={now} /> : null}</div>

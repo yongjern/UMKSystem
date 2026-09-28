@@ -10,6 +10,16 @@ const garamond = EB_Garamond({ subsets: ["latin"], style: ["italic"], variable: 
 export const metadata: Metadata = {
   title: "UMK Personal Dashboard",
   description: "UMK systems, tools, and weekly timetable in one place.",
+  icons: {
+    icon: [{ url: "/logo.svg", type: "image/svg+xml" }],
+    shortcut: "/logo.svg",
+    apple: "/logo.svg",
+  },
+  openGraph: {
+    title: "UMK Personal Dashboard",
+    description: "UMK systems, tools, and weekly timetable in one place.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

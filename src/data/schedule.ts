@@ -22,6 +22,31 @@ export const courseNames: Record<string, string> = {
   USK10602: "FALSAFAH DAN CABARAN SEMASA",
 };
 
+export const courseLinks: Record<string, Partial<Record<SessionType, string>>> = {
+  ATF10203: {
+    Lecture: "https://ecampus.umk.edu.my/course/view.php?id=111126122",
+    Tutorial: "https://ecampus.umk.edu.my/course/view.php?id=111126123",
+  },
+  HFT10103: {
+    Lecture: "https://ecampus.umk.edu.my/course/view.php?id=111127150",
+    Tutorial: "https://ecampus.umk.edu.my/course/view.php?id=111127151",
+  },
+  HFT10403: {
+    Lecture: "https://ecampus.umk.edu.my/course/view.php?id=111127162",
+    Tutorial: "https://ecampus.umk.edu.my/course/view.php?id=111127163",
+  },
+  HTP10103: {
+    Lecture: "https://ecampus.umk.edu.my/course/view.php?id=111127392",
+    Tutorial: "https://ecampus.umk.edu.my/course/view.php?id=111127393",
+  },
+  UKS10401: {
+    Lecture: "https://ecampus.umk.edu.my/course/view.php?id=111128565",
+  },
+  USK10602: {
+    Lecture: "https://ecampus.umk.edu.my/course/view.php?id=111128828",
+  },
+};
+
 export const classSchedule: ClassSession[] = [
   { day: 0, start: 8, end: 10, code: "UBI2022", group: "PC20", type: "Lecture", mode: "Online 10K" },
   { day: 0, start: 10, end: 11, code: "HTP10103", group: "L1T1", type: "Tutorial", mode: "Online 1K" },
