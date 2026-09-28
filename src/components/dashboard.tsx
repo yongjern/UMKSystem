@@ -112,13 +112,15 @@ function QuickLinkCard({ link }: { link: QuickLink }) {
 }
 
 function Timetable({ now }: { now: Date }) {
+  const [selectedSession, setSelectedSession] = useState<ClassSession | null>(null);
   const currentHour = now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
   const showTimeLine = currentHour >= 8 && currentHour < 22;
   const linePosition = 7.5 + ((currentHour - 8) / 14) * 92.5;
   return (
-    <div className="timetable-scroll">
-      <div className="timetable-canvas">
-      <table className="timetable">
+    <div className="timetable-block">
+      <div className="timetable-scroll">
+        <div className="timetable-canvas">
+        <table className="timetable">
         <colgroup><col className="day-column" />{timeSlots.map((hour) => <col key={hour} className="time-column" />)}</colgroup>
         <thead><tr><th scope="col">DAY</th>{timeSlots.map((hour) => <th scope="col" key={hour}>{hour.toString().padStart(2, "0")}</th>)}</tr></thead>
         <tbody>
@@ -131,7 +133,7 @@ function Timetable({ now }: { now: Date }) {
               if (session) {
                 const span = session.end - session.start;
                 const colors = courseColors[session.code];
-                cells.push(<td className="class-cell" style={{ backgroundColor: colors.background, borderLeftColor: colors.accent }} colSpan={span} key={`${day}-${hour}`}><strong>{session.code}</strong><span>{session.group} · {session.mode}</span><span className="course-tooltip" role="tooltip"><strong>{courseNames[session.code]}</strong><span>{session.code} · {session.type}</span><span>Group {session.group}</span><span>{formatHour(session.start)}—{formatHour(session.end)} · {session.mode}</span></span></td>);
+                cells.push(<td className="class-cell" style={{ backgroundColor: colors.background, borderLeftColor: colors.accent }} colSpan={span} key={`${day}-${hour}`} tabIndex={0} onMouseEnter={() => setSelectedSession(session)} onFocus={() => setSelectedSession(session)} onClick={() => setSelectedSession(session)} aria-label={`${session.code}, ${courseNames[session.code]}, ${session.type}, group ${session.group}, ${formatHour(session.start)} to ${formatHour(session.end)}, ${session.mode}`}><strong>{session.code}</strong><span>{session.group} · {session.mode}</span></td>);
                 hour += span;
               } else {
                 cells.push(<td className="empty-cell" key={`${day}-${hour}`} aria-label={`${day} ${hour}:00 empty`} />);
@@ -141,8 +143,12 @@ function Timetable({ now }: { now: Date }) {
             return <tr className={dayIndex === now.getDay() ? "today-row" : ""} key={day}><th scope="row">{day.toUpperCase()}</th>{cells}</tr>;
           })}
         </tbody>
-      </table>
-      {showTimeLine ? <div className="current-time-line" style={{ left: `${linePosition}%` }} aria-label={`Current time ${formatHour(currentHour)}`}><span>{formatHour(currentHour)}</span></div> : null}
+        </table>
+        {showTimeLine ? <div className="current-time-line" style={{ left: `${linePosition}%` }} aria-label={`Current time ${formatHour(currentHour)}`}><span>{formatHour(currentHour)}</span></div> : null}
+        </div>
+      </div>
+      <div className={`course-details${selectedSession ? " active" : ""}`} aria-live="polite">
+        {selectedSession ? <><div><span className="eyebrow">{selectedSession.code} / {selectedSession.type.toUpperCase()}</span><strong>{courseNames[selectedSession.code]}</strong></div><dl><div><dt>GROUP</dt><dd>{selectedSession.group}</dd></div><div><dt>TIME</dt><dd>{formatHour(selectedSession.start)}—{formatHour(selectedSession.end)}</dd></div><div><dt>LOCATION</dt><dd>{selectedSession.mode}</dd></div></dl></> : <p>Hover, focus, or tap a class to view its details.</p>}
       </div>
     </div>
   );
@@ -152,6 +158,7 @@ function BusSchedule({ now }: { now: Date }) {
   const [direction, setDirection] = useState<BusDirection>("toKampus");
   const nextBus = getNextBus(now, direction);
   const activeRoute = busRoutes.find((route) => route.direction === direction) ?? busRoutes[0];
+  const isLastBus = Boolean(nextBus && nextBus.departure === activeRoute.departures.at(-1));
 
   return (
     <section className="bus-section" aria-labelledby="bus-title">
@@ -162,13 +169,10 @@ function BusSchedule({ now }: { now: Date }) {
         </div>
       </div>
       <div className="bus-board">
-        <div className="next-bus-panel">
+        <div className={`next-bus-panel${isLastBus ? " last-bus" : ""}`}>
           <span className="bus-icon"><BusFront size={25} /></span>
-          <div className="bus-route"><small>NEXT DEPARTURE</small><strong>{activeRoute.from} <ArrowRight size={18} /> {activeRoute.to}</strong></div>
-          <time>{nextBus?.departure ?? "--:--"}<small>{nextBus ? `IN ${busCountdown(now, nextBus.departureDate)}` : "NO SERVICE"}</small></time>
-        </div>
-        <div className="departure-strip">
-          {activeRoute.departures.map((departure) => <span className={nextBus?.departure === departure && nextBus.departureDate.toDateString() === now.toDateString() ? "next" : ""} key={departure}>{departure}</span>)}
+          <div className="bus-route"><small>{isLastBus ? "LAST DEPARTURE" : "NEXT DEPARTURE"}</small><strong>{activeRoute.from} <ArrowRight size={18} /> {activeRoute.to}</strong></div>
+          <time>{nextBus?.departure ?? "--:--"}<small>{nextBus ? `${isLastBus ? "LAST BUS · " : ""}IN ${busCountdown(now, nextBus.departureDate)}` : "NO SERVICE"}</small></time>
         </div>
         <p>Service times are based on the UMK schedule issued 11 March 2026 and may change during public holidays.</p>
       </div>

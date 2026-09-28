@@ -1,6 +1,8 @@
-# UMK Personal Dashboard
-
-一個以 Next.js App Router、TypeScript 與 Tailwind CSS 建立的單人 UMK 入口網站。首頁提供即時下一堂課、今日／本週行程、週課表和常用連結。Google Calendar 尚未設定時會自動使用本地 seed 課表。
+# This is a customise project.
+(EN Version down)  
+這是一個已經高度自定義的 Project. 因此，如果您需要使用這樣的系統，請自行 fork, 并且自行使用 AI 工具 (如: ChatGPT, Claude) 幫您自定義您的網頁及工具。  
+This is a highly-customise project. So, please FORK if you want use this system.  
+If you can't make it, just use AI tools to change it.
 
 ## 專案結構
 
