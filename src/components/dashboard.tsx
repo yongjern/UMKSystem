@@ -185,27 +185,28 @@ function Timetable({ now }: { now: Date }) {
 }
 
 function BusSchedule({ now }: { now: Date }) {
-  const [direction, setDirection] = useState<BusDirection>("toKampus");
-  const nextBus = getNextBus(now, direction);
-  const activeRoute = busRoutes.find((route) => route.direction === direction) ?? busRoutes[0];
-  const isLastBus = Boolean(nextBus && nextBus.departure === activeRoute.departures.at(-1));
   const recommendedBus = getRecommendedBus(now);
 
   return (
     <section className="bus-section" aria-labelledby="bus-title">
       <div className="section-heading bus-heading">
         <div><span className="eyebrow">SUNDAY—THURSDAY / SHUTTLE</span><h2 id="bus-title">Kampus Kota bus</h2></div>
-        <div className="route-toggle" aria-label="Bus direction">
-          {busRoutes.map((route) => <button key={route.direction} className={direction === route.direction ? "active" : ""} onClick={() => setDirection(route.direction)}>{route.shortLabel}</button>)}
-        </div>
       </div>
       <div className="bus-board">
-        <div className={`next-bus-panel${isLastBus ? " last-bus" : ""}`}>
-          <span className="bus-icon"><BusFront size={25} /></span>
-          <div className="bus-route"><small>{isLastBus ? "LAST DEPARTURE" : "NEXT DEPARTURE"}</small><strong>{activeRoute.from} <ArrowRight size={18} /> {activeRoute.to}</strong></div>
-          <time>{nextBus?.departure ?? "--:--"}<small>{nextBus ? `${isLastBus ? "LAST BUS · " : ""}IN ${busCountdown(now, nextBus.departureDate)}` : "NO SERVICE"}</small></time>
+        <div className="bus-directions">
+          {busRoutes.map((route) => {
+            const nextBus = getNextBus(now, route.direction);
+            const isLastBus = Boolean(nextBus && nextBus.departure === route.departures.at(-1));
+            return <div className="bus-direction" key={route.direction}>
+              <div className={`next-bus-panel${isLastBus ? " last-bus" : ""}`}>
+                <span className="bus-icon"><BusFront size={25} /></span>
+                <div className="bus-route"><small>{isLastBus ? "LAST DEPARTURE" : "NEXT DEPARTURE"}</small><strong>{route.from} <ArrowRight size={18} /> {route.to}</strong></div>
+                <time>{nextBus?.departure ?? "--:--"}<small>{nextBus ? `${isLastBus ? "LAST BUS · " : ""}IN ${busCountdown(now, nextBus.departureDate)}` : "NO SERVICE"}</small></time>
+              </div>
+              {route.direction === "toKampus" && recommendedBus ? <div className="class-bus-advice"><Bell size={16} /><span><strong>LEAVE FOR {recommendedBus.nextClass.session.code}</strong>Take the {recommendedBus.departure} bus for the {formatHour(recommendedBus.nextClass.session.start)} class at {recommendedBus.nextClass.session.mode}.</span><small>45 MIN BUFFER</small></div> : null}
+            </div>;
+          })}
         </div>
-        {recommendedBus ? <div className="class-bus-advice"><Bell size={16} /><span><strong>LEAVE FOR {recommendedBus.nextClass.session.code}</strong>Take the {recommendedBus.departure} bus for the {formatHour(recommendedBus.nextClass.session.start)} class at {recommendedBus.nextClass.session.mode}.</span><small>45 MIN BUFFER</small></div> : null}
         <p>Service times are based on the UMK schedule issued 11 March 2026 and may change during public holidays.</p>
       </div>
     </section>
