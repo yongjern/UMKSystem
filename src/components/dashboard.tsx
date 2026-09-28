@@ -1,7 +1,8 @@
 "use client";
 
-import { ArrowRight, ArrowUpRight, BookOpen, BusFront, CalendarDays, Clock3, ExternalLink, FileText, GraduationCap, MapPin, MessageCircle, MoonStar, Plus, Radio, Sparkles, Trash2, Video, Wifi } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Bell, BellRing, BookOpen, BusFront, CalendarDays, ClipboardList, Clock3, Download, ExternalLink, FileText, GraduationCap, MapPin, MessageCircle, MoonStar, Plus, Radio, Sparkles, Trash2, Video, Wifi } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { type FormEvent, useEffect, useState } from "react";
 import { quickLinks, type QuickLink } from "@/data/links";
 import { busOperatingDays, busRoutes, type BusDirection } from "@/data/bus-schedule";
@@ -10,6 +11,10 @@ import { addCustomEvent as addEventToDatabase, deleteCustomEvent, getCustomEvent
 import type { CalendarEvent } from "@/lib/calendar";
 
 const icons = { book: BookOpen, calendar: CalendarDays, campus: GraduationCap, file: FileText, message: MessageCircle, sparkles: Sparkles, video: Video, wifi: Wifi };
+type InstallPromptEvent = Event & {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+};
 const timeSlots = Array.from({ length: 14 }, (_, index) => index + 8);
 const courseColors: Record<string, { background: string; accent: string }> = {
   UBI2022: { background: "#42220b", accent: "#ffb13d" },
@@ -46,6 +51,30 @@ function getNextSession(now: Date) {
     return [{ session, start, end }, { session, start: nextWeekStart, end: nextWeekEnd }];
   });
   return candidates.filter(({ end }) => end > now).sort((a, b) => a.start.getTime() - b.start.getTime())[0];
+}
+
+function getNextPhysicalSession(now: Date) {
+  const candidates = classSchedule
+    .filter((session) => !/^(Online|Async)/i.test(session.mode))
+    .flatMap((session) => [sessionDate(session, now), sessionDate(session, now, 1)].map((start) => ({ session, start })))
+    .filter(({ start }) => start > now)
+    .sort((first, second) => first.start.getTime() - second.start.getTime());
+  return candidates[0];
+}
+
+function getRecommendedBus(now: Date) {
+  const nextClass = getNextPhysicalSession(now);
+  if (!nextClass || !busOperatingDays.includes(nextClass.start.getDay() as (typeof busOperatingDays)[number])) return null;
+  const route = busRoutes.find((item) => item.direction === "toKampus") ?? busRoutes[0];
+  const arrivalCutoff = new Date(nextClass.start.getTime() - 45 * 60000);
+  const departures = route.departures.map((departure) => {
+    const [hours, minutes] = departure.split(":").map(Number);
+    const departureDate = new Date(nextClass.start);
+    departureDate.setHours(hours, minutes, 0, 0);
+    return { departure, departureDate };
+  }).filter(({ departureDate }) => departureDate > now && departureDate <= arrivalCutoff);
+  const bus = departures.at(-1);
+  return bus ? { ...bus, nextClass } : null;
 }
 
 function countdownLabel(now: Date, start: Date, end: Date) {
@@ -160,6 +189,7 @@ function BusSchedule({ now }: { now: Date }) {
   const nextBus = getNextBus(now, direction);
   const activeRoute = busRoutes.find((route) => route.direction === direction) ?? busRoutes[0];
   const isLastBus = Boolean(nextBus && nextBus.departure === activeRoute.departures.at(-1));
+  const recommendedBus = getRecommendedBus(now);
 
   return (
     <section className="bus-section" aria-labelledby="bus-title">
@@ -175,6 +205,7 @@ function BusSchedule({ now }: { now: Date }) {
           <div className="bus-route"><small>{isLastBus ? "LAST DEPARTURE" : "NEXT DEPARTURE"}</small><strong>{activeRoute.from} <ArrowRight size={18} /> {activeRoute.to}</strong></div>
           <time>{nextBus?.departure ?? "--:--"}<small>{nextBus ? `${isLastBus ? "LAST BUS · " : ""}IN ${busCountdown(now, nextBus.departureDate)}` : "NO SERVICE"}</small></time>
         </div>
+        {recommendedBus ? <div className="class-bus-advice"><Bell size={16} /><span><strong>LEAVE FOR {recommendedBus.nextClass.session.code}</strong>Take the {recommendedBus.departure} bus for the {formatHour(recommendedBus.nextClass.session.start)} class at {recommendedBus.nextClass.session.mode}.</span><small>45 MIN BUFFER</small></div> : null}
         <p>Service times are based on the UMK schedule issued 11 March 2026 and may change during public holidays.</p>
       </div>
     </section>
@@ -260,15 +291,51 @@ function Agenda({ now }: { now: Date }) {
 
 export function Dashboard() {
   const [now, setNow] = useState<Date | null>(null);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null);
   useEffect(() => { const update = () => setNow(new Date()); update(); const timer = window.setInterval(update, 1000); return () => window.clearInterval(timer); }, []);
+  useEffect(() => {
+    if ("Notification" in window) setNotificationsEnabled(Notification.permission === "granted" && window.localStorage.getItem("umk-class-notifications") === "enabled");
+    if ("serviceWorker" in navigator) void navigator.serviceWorker.register("/sw.js");
+    const captureInstallPrompt = (event: Event) => { event.preventDefault(); setInstallPrompt(event as InstallPromptEvent); };
+    window.addEventListener("beforeinstallprompt", captureInstallPrompt);
+    return () => window.removeEventListener("beforeinstallprompt", captureInstallPrompt);
+  }, []);
   const next = now ? getNextSession(now) : null;
   const showGoodNight = Boolean(now && next && isTomorrow(now, next.start));
   const nextCourseLink = next ? courseLinks[next.session.code]?.[next.session.type] : undefined;
   const nextMeetLink = next ? courseMeetLinks[next.session.code] : undefined;
+  useEffect(() => {
+    if (!("Notification" in window) || !now || !next || !notificationsEnabled || Notification.permission !== "granted" || now >= next.start) return;
+    const minutes = Math.ceil((next.start.getTime() - now.getTime()) / 60000);
+    const threshold = minutes <= 10 ? 10 : minutes <= 30 ? 30 : null;
+    if (!threshold) return;
+    const notificationKey = `umk-notified-${next.session.code}-${next.start.toISOString()}-${threshold}`;
+    if (window.localStorage.getItem(notificationKey)) return;
+    const notification = new Notification(`${next.session.code} starts in ${minutes} minutes`, { body: `${next.session.type} · ${next.session.mode} · ${formatHour(next.session.start)}`, icon: "/logo.svg", tag: notificationKey });
+    notification.onclick = () => { window.focus(); if (nextMeetLink) window.open(nextMeetLink, "_blank", "noopener,noreferrer"); };
+    window.localStorage.setItem(notificationKey, "sent");
+  }, [next, nextMeetLink, notificationsEnabled, now]);
+
+  async function enableNotifications() {
+    if (!("Notification" in window)) return;
+    const permission = await Notification.requestPermission();
+    const enabled = permission === "granted";
+    setNotificationsEnabled(enabled);
+    if (enabled) window.localStorage.setItem("umk-class-notifications", "enabled");
+  }
+
+  async function installApp() {
+    if (!installPrompt) return;
+    await installPrompt.prompt();
+    await installPrompt.userChoice;
+    setInstallPrompt(null);
+  }
   return (
     <main className="dashboard-shell">
       <header className="site-header"><div className="brand-lockup"><Image src="https://corporate.umk.edu.my/download/logo%20UMK%20(Menegak)_1bu43dewg9ja8.png" alt="Universiti Malaysia Kelantan" width={596} height={843} priority unoptimized /><div><span>PERSONAL OPERATIONS BOARD</span><h1>My UMK</h1></div></div><div className="live-clock" aria-label="Current date and time"><span><Radio size={12} fill="currentColor" /> LIVE</span><strong>{now ? now.toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }) : "--:--:--"}</strong><small>{now ? now.toLocaleDateString("en-MY", { weekday: "long", day: "2-digit", month: "short" }).toUpperCase() : "LOADING"}</small></div></header>
       <div className="signal-divider" aria-hidden="true" />
+      <nav className="dashboard-tools" aria-label="Dashboard tools"><Link href="/planner"><ClipboardList size={16} /> PLANNER</Link><button onClick={() => void enableNotifications()} className={notificationsEnabled ? "active" : ""}>{notificationsEnabled ? <BellRing size={16} /> : <Bell size={16} />} {notificationsEnabled ? "REMINDERS ON" : "CLASS REMINDERS"}</button>{installPrompt ? <button onClick={() => void installApp()}><Download size={16} /> INSTALL APP</button> : null}</nav>
       {showGoodNight ? <section className="next-class good-night" aria-labelledby="next-title"><div className="night-icon"><MoonStar size={38} /></div><div className="next-main"><h2 id="next-title">晚安，明天見。</h2></div></section> : <section className="next-class" aria-labelledby="next-title"><div className="next-status"><span className="eyebrow"><Clock3 size={14} /> NEXT ON SCHEDULE</span><strong>{now && next ? countdownLabel(now, next.start, next.end) : "CALCULATING"}</strong></div><div className="next-main"><span className="day-number">{next ? next.start.getDate().toString().padStart(2, "0") : "--"}</span><div><h2 id="next-title">{next?.session.code ?? "Loading schedule"}</h2><p>{next ? `${next.session.type} · Group ${next.session.group}` : "Semester September · Session 2026/2027"}</p></div></div><div className="next-meta"><span><Clock3 size={15} /> {next ? `${formatHour(next.session.start)}—${formatHour(next.session.end)}` : "--:--"}</span><span><MapPin size={15} /> {next?.session.mode ?? "Checking"}</span>{next && (nextMeetLink || nextCourseLink) ? <div className="next-actions">{nextMeetLink ? <a className="meet-action" href={nextMeetLink} target="_blank" rel="noreferrer" aria-label={`Join ${next.session.code} Google Meet`}><Video size={15} /> JOIN MEET</a> : null}{nextCourseLink ? <a href={nextCourseLink} target="_blank" rel="noreferrer" aria-label={`Open ${next.session.code} on e-Campus`}><ExternalLink size={15} /> E-CAMPUS</a> : null}</div> : null}</div></section>}
       <div className="schedule-layout"><section className="timetable-section" aria-labelledby="timetable-title"><div className="section-heading"><div><span className="eyebrow">SEMESTER SEPTEMBER · 2026/2027</span><h2 id="timetable-title">Weekly timetable</h2></div><div className="legend"><span className="lecture-dot">LECTURE</span><span className="tutorial-dot">TUTORIAL</span></div></div>{now ? <Timetable now={now} /> : null}</section>{now ? <Agenda now={now} /> : null}</div>
       {now ? <BusSchedule now={now} /> : null}

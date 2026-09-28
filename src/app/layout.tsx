@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { EB_Garamond, IBM_Plex_Mono, Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 
@@ -10,6 +10,7 @@ const garamond = EB_Garamond({ subsets: ["latin"], style: ["italic"], variable: 
 export const metadata: Metadata = {
   title: "UMK Personal Dashboard",
   description: "UMK systems, tools, and weekly timetable in one place.",
+  manifest: "/manifest.webmanifest",
   icons: {
     icon: [{ url: "/logo.svg", type: "image/svg+xml" }],
     shortcut: "/logo.svg",
@@ -20,6 +21,10 @@ export const metadata: Metadata = {
     description: "UMK systems, tools, and weekly timetable in one place.",
     type: "website",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#ff3b57",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

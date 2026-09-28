@@ -2,14 +2,28 @@ import type { CalendarEvent } from "@/lib/calendar";
 
 const databaseName = "umk-dashboard";
 const storeName = "custom-events";
+const plannerStoreName = "planner-items";
 const legacyStorageKey = "umk-custom-events";
+
+export type PlannerItem = {
+  id: string;
+  kind: "assignment" | "exam";
+  title: string;
+  courseCode: string;
+  dueAt: string;
+  notes: string;
+  completed: boolean;
+};
 
 function openDatabase() {
   return new Promise<IDBDatabase>((resolve, reject) => {
-    const request = window.indexedDB.open(databaseName, 1);
+    const request = window.indexedDB.open(databaseName, 2);
     request.onupgradeneeded = () => {
       if (!request.result.objectStoreNames.contains(storeName)) {
         request.result.createObjectStore(storeName, { keyPath: "id" });
+      }
+      if (!request.result.objectStoreNames.contains(plannerStoreName)) {
+        request.result.createObjectStore(plannerStoreName, { keyPath: "id" });
       }
     };
     request.onsuccess = () => resolve(request.result);
@@ -63,4 +77,33 @@ export async function migrateLegacyEvents() {
   const events = JSON.parse(savedEvents) as CalendarEvent[];
   await Promise.all(events.map(addCustomEvent));
   window.localStorage.removeItem(legacyStorageKey);
+}
+
+export async function getPlannerItems() {
+  const database = await openDatabase();
+  const transaction = database.transaction(plannerStoreName, "readonly");
+  const request = transaction.objectStore(plannerStoreName).getAll();
+  const items = await new Promise<PlannerItem[]>((resolve, reject) => {
+    request.onsuccess = () => resolve(request.result as PlannerItem[]);
+    request.onerror = () => reject(request.error);
+  });
+  await completeTransaction(transaction);
+  database.close();
+  return items.sort((first, second) => new Date(first.dueAt).getTime() - new Date(second.dueAt).getTime());
+}
+
+export async function savePlannerItem(item: PlannerItem) {
+  const database = await openDatabase();
+  const transaction = database.transaction(plannerStoreName, "readwrite");
+  transaction.objectStore(plannerStoreName).put(item);
+  await completeTransaction(transaction);
+  database.close();
+}
+
+export async function deletePlannerItem(id: string) {
+  const database = await openDatabase();
+  const transaction = database.transaction(plannerStoreName, "readwrite");
+  transaction.objectStore(plannerStoreName).delete(id);
+  await completeTransaction(transaction);
+  database.close();
 }
