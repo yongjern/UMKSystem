@@ -52,14 +52,15 @@ footer { margin-top:70px; min-height:80px; display:flex; justify-content:space-b
 	.dashboard-shell { overflow-x:hidden; }
 	.timetable-block { width:100%; max-width:100%; overflow:visible; }
 	.timetable-block>.timetable-scroll {
+		display:block;
 		width:100%;
 		max-width:100%;
 		margin-right:0;
-		overflow-x:scroll;
+		overflow-x:auto;
 		overflow-y:hidden;
 		-webkit-overflow-scrolling:touch;
-		overscroll-behavior-x:contain;
-		touch-action:pan-x;
+		touch-action:auto;
 	}
-	.timetable-scroll .timetable-canvas { width:830px; min-width:830px; }
+	.timetable-scroll .timetable-canvas,
+	.timetable-scroll .timetable { width:830px; min-width:830px; }
 }

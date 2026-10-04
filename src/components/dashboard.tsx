@@ -53,28 +53,25 @@ function getNextSession(now: Date) {
   return candidates.filter(({ end }) => end > now).sort((a, b) => a.start.getTime() - b.start.getTime())[0];
 }
 
-function getNextPhysicalSession(now: Date) {
-  const candidates = classSchedule
-    .filter((session) => !/^(Online|Async)/i.test(session.mode))
-    .flatMap((session) => [sessionDate(session, now), sessionDate(session, now, 1)].map((start) => ({ session, start })))
-    .filter(({ start }) => start > now)
-    .sort((first, second) => first.start.getTime() - second.start.getTime());
-  return candidates[0];
-}
-
 function getRecommendedBus(now: Date) {
-  const nextClass = getNextPhysicalSession(now);
-  if (!nextClass || !busOperatingDays.includes(nextClass.start.getDay() as (typeof busOperatingDays)[number])) return null;
+  if (!busOperatingDays.includes(now.getDay() as (typeof busOperatingDays)[number])) return null;
+  const firstPhysicalClass = classSchedule
+    .filter((session) => session.day === now.getDay() && !/^(Online|Async)/i.test(session.mode))
+    .sort((first, second) => first.start - second.start)[0];
+  if (!firstPhysicalClass) return null;
+  const classStart = new Date(now);
+  classStart.setHours(Math.floor(firstPhysicalClass.start), Math.round((firstPhysicalClass.start % 1) * 60), 0, 0);
   const route = busRoutes.find((item) => item.direction === "toKampus") ?? busRoutes[0];
-  const arrivalCutoff = new Date(nextClass.start.getTime() - 45 * 60000);
+  const arrivalCutoff = new Date(classStart.getTime() - 45 * 60000);
   const departures = route.departures.map((departure) => {
     const [hours, minutes] = departure.split(":").map(Number);
-    const departureDate = new Date(nextClass.start);
+    const departureDate = new Date(classStart);
     departureDate.setHours(hours, minutes, 0, 0);
     return { departure, departureDate };
-  }).filter(({ departureDate }) => departureDate > now && departureDate <= arrivalCutoff);
+  }).filter(({ departureDate }) => departureDate <= arrivalCutoff);
   const bus = departures.at(-1);
-  return bus ? { ...bus, nextClass } : null;
+  if (!bus || now < new Date(bus.departureDate.getTime() - 3 * 60 * 60000) || now >= bus.departureDate) return null;
+  return { ...bus, nextClass: { session: firstPhysicalClass, start: classStart } };
 }
 
 function countdownLabel(now: Date, start: Date, end: Date) {
