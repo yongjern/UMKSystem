@@ -116,7 +116,7 @@ function busCountdown(now: Date, departure: Date) {
 }
 
 async function showNotificationTest() {
-  if (!("Notification" in window) || Notification.permission !== "granted") return false;
+  if (typeof Notification === "undefined" || Notification.permission !== "granted") return false;
   const options: NotificationOptions = {
     body: "通知功能已成功連接。課堂提醒將會透過這個渠道顯示。",
     icon: "/logo.svg",
@@ -352,15 +352,15 @@ export function Dashboard() {
 
   async function enableNotifications() {
     if (!window.isSecureContext) {
-      window.alert("通知需要 HTTPS 安全連線。請使用 Vercel 的 https:// 網址再試一次。");
+      globalThis.alert("通知需要 HTTPS 安全連線。請使用 Vercel 的 https:// 網址再試一次。");
       return;
     }
-    if (!("Notification" in window)) {
-      window.alert("這個瀏覽器不支援網頁通知。iPhone/iPad 請先將網站加入主畫面，再從主畫面開啟。");
+    if (typeof Notification === "undefined") {
+      globalThis.alert("這個瀏覽器不支援網頁通知。iPhone/iPad 請先將網站加入主畫面，再從主畫面開啟。");
       return;
     }
     if (Notification.permission === "denied") {
-      window.alert("通知權限已被封鎖。請在瀏覽器的網站設定中將 Notifications 改為 Allow，然後重新載入頁面。");
+      globalThis.alert("通知權限已被封鎖。請在瀏覽器的網站設定中將 Notifications 改為 Allow，然後重新載入頁面。");
       return;
     }
     try {
@@ -368,15 +368,15 @@ export function Dashboard() {
       const enabled = permission === "granted";
       setNotificationsEnabled(enabled);
       if (!enabled) {
-        window.alert("尚未取得通知權限。請再次點擊並在瀏覽器提示中選擇 Allow。");
+        globalThis.alert("尚未取得通知權限。請再次點擊並在瀏覽器提示中選擇 Allow。");
         return;
       }
       window.localStorage.setItem("umk-class-notifications", "enabled");
       const notificationSent = await showNotificationTest();
-      if (!notificationSent) window.alert("通知權限已開啟，但測試通知未能送出。");
+      if (!notificationSent) globalThis.alert("通知權限已開啟，但測試通知未能送出。");
     } catch (error) {
       console.error("Unable to show notification test", error);
-      window.alert("測試通知發送失敗。請重新載入頁面後再試，並確認瀏覽器及系統通知均已開啟。");
+      globalThis.alert("測試通知發送失敗。請重新載入頁面後再試，並確認瀏覽器及系統通知均已開啟。");
     }
   }
 
