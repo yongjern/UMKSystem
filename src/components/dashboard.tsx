@@ -115,6 +115,22 @@ function busCountdown(now: Date, departure: Date) {
   return `${minutes} MIN`;
 }
 
+async function showNotificationTest() {
+  if (!("Notification" in window) || Notification.permission !== "granted") return;
+  const options: NotificationOptions = {
+    body: "通知功能已成功連接。課堂提醒將會透過這個渠道顯示。",
+    icon: "/logo.svg",
+    tag: `umk-load-test-${Date.now()}`,
+  };
+  if ("serviceWorker" in navigator) {
+    const registration = await navigator.serviceWorker.register("/sw.js");
+    await navigator.serviceWorker.ready;
+    await registration.showNotification("My UMK 通知測試", options);
+    return;
+  }
+  new Notification("My UMK 通知測試", options);
+}
+
 function QuickLinkCard({ link }: { link: QuickLink }) {
   const Icon = icons[link.icon];
   return (
@@ -307,7 +323,11 @@ export function Dashboard() {
   const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null);
   useEffect(() => { const update = () => setNow(new Date()); update(); const timer = window.setInterval(update, 1000); return () => window.clearInterval(timer); }, []);
   useEffect(() => {
-    if ("Notification" in window) setNotificationsEnabled(Notification.permission === "granted" && window.localStorage.getItem("umk-class-notifications") === "enabled");
+    if ("Notification" in window) {
+      const enabled = Notification.permission === "granted" && window.localStorage.getItem("umk-class-notifications") === "enabled";
+      setNotificationsEnabled(enabled);
+      if (Notification.permission === "granted") void showNotificationTest();
+    }
     if ("serviceWorker" in navigator) void navigator.serviceWorker.register("/sw.js");
     const captureInstallPrompt = (event: Event) => { event.preventDefault(); setInstallPrompt(event as InstallPromptEvent); };
     window.addEventListener("beforeinstallprompt", captureInstallPrompt);
@@ -334,7 +354,10 @@ export function Dashboard() {
     const permission = await Notification.requestPermission();
     const enabled = permission === "granted";
     setNotificationsEnabled(enabled);
-    if (enabled) window.localStorage.setItem("umk-class-notifications", "enabled");
+    if (enabled) {
+      window.localStorage.setItem("umk-class-notifications", "enabled");
+      await showNotificationTest();
+    }
   }
 
   async function installApp() {
