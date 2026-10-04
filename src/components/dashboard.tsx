@@ -116,19 +116,20 @@ function busCountdown(now: Date, departure: Date) {
 }
 
 async function showNotificationTest() {
-  if (!("Notification" in window) || Notification.permission !== "granted") return;
+  if (!("Notification" in window) || Notification.permission !== "granted") return false;
   const options: NotificationOptions = {
     body: "通知功能已成功連接。課堂提醒將會透過這個渠道顯示。",
     icon: "/logo.svg",
     tag: `umk-load-test-${Date.now()}`,
   };
   if ("serviceWorker" in navigator) {
-    const registration = await navigator.serviceWorker.register("/sw.js");
-    await navigator.serviceWorker.ready;
+    await navigator.serviceWorker.register("/sw.js");
+    const registration = await navigator.serviceWorker.ready;
     await registration.showNotification("My UMK 通知測試", options);
-    return;
+    return true;
   }
   new Notification("My UMK 通知測試", options);
+  return true;
 }
 
 function QuickLinkCard({ link }: { link: QuickLink }) {
@@ -326,7 +327,7 @@ export function Dashboard() {
     if ("Notification" in window) {
       const enabled = Notification.permission === "granted" && window.localStorage.getItem("umk-class-notifications") === "enabled";
       setNotificationsEnabled(enabled);
-      if (Notification.permission === "granted") void showNotificationTest();
+      if (Notification.permission === "granted") void showNotificationTest().catch((error) => console.error("Unable to show page-load notification", error));
     }
     if ("serviceWorker" in navigator) void navigator.serviceWorker.register("/sw.js");
     const captureInstallPrompt = (event: Event) => { event.preventDefault(); setInstallPrompt(event as InstallPromptEvent); };
@@ -350,13 +351,32 @@ export function Dashboard() {
   }, [next, nextMeetLink, notificationsEnabled, now]);
 
   async function enableNotifications() {
-    if (!("Notification" in window)) return;
-    const permission = await Notification.requestPermission();
-    const enabled = permission === "granted";
-    setNotificationsEnabled(enabled);
-    if (enabled) {
+    if (!window.isSecureContext) {
+      window.alert("通知需要 HTTPS 安全連線。請使用 Vercel 的 https:// 網址再試一次。");
+      return;
+    }
+    if (!("Notification" in window)) {
+      window.alert("這個瀏覽器不支援網頁通知。iPhone/iPad 請先將網站加入主畫面，再從主畫面開啟。");
+      return;
+    }
+    if (Notification.permission === "denied") {
+      window.alert("通知權限已被封鎖。請在瀏覽器的網站設定中將 Notifications 改為 Allow，然後重新載入頁面。");
+      return;
+    }
+    try {
+      const permission = await Notification.requestPermission();
+      const enabled = permission === "granted";
+      setNotificationsEnabled(enabled);
+      if (!enabled) {
+        window.alert("尚未取得通知權限。請再次點擊並在瀏覽器提示中選擇 Allow。");
+        return;
+      }
       window.localStorage.setItem("umk-class-notifications", "enabled");
-      await showNotificationTest();
+      const notificationSent = await showNotificationTest();
+      if (!notificationSent) window.alert("通知權限已開啟，但測試通知未能送出。");
+    } catch (error) {
+      console.error("Unable to show notification test", error);
+      window.alert("測試通知發送失敗。請重新載入頁面後再試，並確認瀏覽器及系統通知均已開啟。");
     }
   }
 
