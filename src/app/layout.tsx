@@ -8,7 +8,7 @@ const plexMono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500", "600
 const garamond = EB_Garamond({ subsets: ["latin"], style: ["italic"], variable: "--font-serif" });
 
 export const metadata: Metadata = {
-  title: "UMK Personal Dashboard",
+  title: "Yong's UMK Personal Dashboard",
   description: "UMK systems, tools, and weekly timetable in one place.",
   manifest: "/manifest.webmanifest",
   icons: {
