@@ -85,7 +85,7 @@ export function Planner() {
           <label><span>TYPE</span><select value={kind} onChange={(event) => setKind(event.target.value as PlannerItem["kind"])}><option value="assignment">Assignment</option><option value="exam">Exam</option><option value="revision">Revision</option></select></label>
           <label><span>COURSE</span><select value={courseCode} onChange={(event) => setCourseCode(event.target.value)}>{Object.entries(courseNames).map(([code, name]) => <option value={code} key={code}>{code} · {name}</option>)}<option value="OTHER">OTHER</option></select></label>
           <label><span>TITLE</span><input value={title} onChange={(event) => setTitle(event.target.value.toUpperCase())} placeholder="QUIZ, REPORT, PRESENTATION..." required /></label>
-          <label><span>DEADLINE</span><input type="date" value={dueAt.slice(0, 10)} onChange={(event) => setDueAt(event.target.value ? midnightOnDate(event.target.value) : "")} required /></label>
+          <label><span>DEADLINE</span><input type="datetime-local" value={dueAt} onChange={(event) => setDueAt(event.target.value ? midnightOnDate(event.target.value.slice(0, 10)) : "")} required /></label>
           <label><span>HYPERLINK</span><input type="url" value={hyperlink} onChange={(event) => setHyperlink(event.target.value)} placeholder="https://..." pattern="https?://.*" /></label>
           <label><span>NOTES</span><textarea value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Submission notes or exam venue" rows={3} /></label>
           <button type="submit"><Plus size={17} /> ADD TO PLANNER</button>

@@ -213,11 +213,12 @@ function BusSchedule({ now }: { now: Date }) {
             const nextBusIndex = nextBus ? route.departures.indexOf(nextBus.departure) : -1;
             const laterDepartures = [route.departures[nextBusIndex + 1], route.departures[nextBusIndex + 2]];
             const isLastBus = Boolean(nextBus && nextBusIndex === route.departures.length - 1);
+            const isUrgent = Boolean(nextBus && nextBus.departureDate.getTime() - now.getTime() <= 5 * 60000);
             return <div className="bus-direction" key={route.direction}>
-              <div className={`next-bus-panel${isLastBus ? " last-bus" : ""}`}>
+              <div className={`next-bus-panel${isLastBus ? " last-bus" : ""}${isUrgent ? " urgent" : ""}`}>
                 <span className="bus-icon"><BusFront size={25} /></span>
                 <div className="bus-route"><small>{isLastBus ? "LAST DEPARTURE" : "NEXT DEPARTURE"}</small><strong>{route.from} <ArrowRight size={18} /> {route.to}</strong></div>
-                <time>{nextBus?.departure ?? "--:--"}<small>{nextBus ? `${isLastBus ? "LAST BUS · " : ""}IN ${busCountdown(now, nextBus.departureDate)}` : "NO SERVICE"}</small></time>
+                <time>{nextBus?.departure ?? "--:--"}<small>{isUrgent ? <span className="urgent-bus-cue"><i aria-hidden="true" /> HURRY · </span> : null}{nextBus ? `${isLastBus ? "LAST BUS · " : ""}IN ${busCountdown(now, nextBus.departureDate)}` : "NO SERVICE"}</small></time>
               </div>
               <div className="later-buses" aria-label={`Following ${route.shortLabel} departures`}>
                 {laterDepartures.map((departure, index) => <div className={`later-bus${departure ? "" : " unavailable"}`} key={index}><small>NEXT {index + 2}</small><strong>{departure ?? ""}</strong></div>)}
