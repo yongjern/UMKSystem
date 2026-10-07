@@ -73,15 +73,15 @@ export function Planner() {
     <main className="planner-shell">
       <header className="planner-header">
         <Link href="/" className="back-link"><ArrowLeft size={17} /> DASHBOARD</Link>
-        <div><span className="eyebrow">ACADEMIC CONTROL</span><h1>Assignments & exams</h1></div>
-        <span className="planner-count">{activeItems.length.toString().padStart(2, "0")} OPEN</span>
+        <div><span className="eyebrow">PLANNER</span><h1>MAKE YOUR PLAN, DO YOUR PLAN.</h1></div>
+        <span className="planner-count">{activeItems.length.toString().padStart(2, "0")} ACTIVE</span>
       </header>
 
       {nextExam ? <section className="exam-countdown"><CalendarClock size={30} /><div><span>NEXT EXAM</span><h2>{nextExam.title.toUpperCase()}</h2><p>{nextExam.courseCode} · {new Date(nextExam.dueAt).toLocaleString("en-MY", { dateStyle: "medium", timeStyle: "short" })}</p></div><strong>{timeRemaining(nextExam.dueAt, now)}</strong></section> : null}
 
       <div className="planner-grid">
         <form className="planner-form" onSubmit={addItem}>
-          <div><span className="eyebrow">NEW ITEM</span><h2>Plan the next deadline</h2></div>
+          <div><span className="eyebrow">NEW PLAN</span><h2>Plan the next deadline</h2></div>
           <label><span>TYPE</span><select value={kind} onChange={(event) => setKind(event.target.value as PlannerItem["kind"])}><option value="assignment">Assignment</option><option value="exam">Exam</option><option value="revision">Revision</option></select></label>
           <label><span>COURSE</span><select value={courseCode} onChange={(event) => setCourseCode(event.target.value)}>{Object.entries(courseNames).map(([code, name]) => <option value={code} key={code}>{code} · {name}</option>)}<option value="OTHER">OTHER</option></select></label>
           <label><span>TITLE</span><input value={title} onChange={(event) => setTitle(event.target.value.toUpperCase())} placeholder="QUIZ, REPORT, PRESENTATION..." required /></label>
@@ -92,7 +92,7 @@ export function Planner() {
         </form>
 
         <section className="planner-list" aria-labelledby="planner-list-title">
-          <div className="planner-list-heading"><div><span className="eyebrow">DEADLINE QUEUE</span><h2 id="planner-list-title">What comes next</h2></div><ClipboardList size={25} /></div>
+          <div className="planner-list-heading"><div><span className="eyebrow">YOUR PLAN HERE :3</span><h2 id="planner-list-title">DO IT BEFORE DEADLINE.</h2></div><ClipboardList size={25} /></div>
           {items.length ? items.map((item) => {
             const overdue = !item.completed && new Date(item.dueAt) <= now;
             return <article className={`planner-item${item.completed ? " completed" : ""}${overdue ? " overdue" : ""}`} key={item.id}>

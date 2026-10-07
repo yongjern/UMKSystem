@@ -118,7 +118,7 @@ function busCountdown(now: Date, departure: Date) {
 async function showNotificationTest() {
   if (typeof Notification === "undefined" || Notification.permission !== "granted") return false;
   const options: NotificationOptions = {
-    body: "歡迎使用 Yong's MYUMK 系統。此消息僅爲確定消息使用。This is a Test Message. Please ignore it.",
+    body: "歡迎使用 Yong's MYUMK 系統。MYUMK系統版本為 : v.1.05.3 Preview 穩定版本",
     icon: "/logo.svg",
     tag: `umk-load-test-${Date.now()}`,
   };
