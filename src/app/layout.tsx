@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     apple: "/logo.svg",
   },
   openGraph: {
-    title: "UMK Personal Dashboard",
+    title: "Yong's UMK System",
     description: "UMK systems, tools, and weekly timetable in one place.",
     type: "website",
   },

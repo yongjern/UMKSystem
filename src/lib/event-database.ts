@@ -7,11 +7,12 @@ const legacyStorageKey = "umk-custom-events";
 
 export type PlannerItem = {
   id: string;
-  kind: "assignment" | "exam";
+  kind: "assignment" | "exam" | "revision";
   title: string;
   courseCode: string;
   dueAt: string;
   notes: string;
+  hyperlink?: string;
   completed: boolean;
 };
 
