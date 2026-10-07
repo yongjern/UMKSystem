@@ -22,4 +22,5 @@ export const quickLinks: QuickLink[] = [
   { name: "Claude", description: "AI workspace", url: "https://claude.ai/", category: "tools", icon: "sparkles" },
   { name: "NotebookLM", description: "Research and source notebook", url: "https://notebooklm.google.com/", category: "tools", icon: "sparkles" },
   { name: "WhatsApp Web", description: "Messages in your browser", url: "https://web.whatsapp.com/", category: "tools", icon: "message" },
+  { name: "Google Drive", description: "Cloud storage and file sharing", url: "https://drive.google.com/", category: "tools", icon: "file" },
 ];

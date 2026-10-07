@@ -118,7 +118,7 @@ function busCountdown(now: Date, departure: Date) {
 async function showNotificationTest() {
   if (typeof Notification === "undefined" || Notification.permission !== "granted") return false;
   const options: NotificationOptions = {
-    body: "通知功能已成功連接。課堂提醒將會透過這個渠道顯示。",
+    body: "歡迎使用 Yong's MYUMK 系統。MYUMK系統版本為 : v.1.06 BETA 穩定版本",
     icon: "/logo.svg",
     tag: `umk-load-test-${Date.now()}`,
   };
@@ -128,7 +128,7 @@ async function showNotificationTest() {
     await registration.showNotification("My UMK 通知測試", options);
     return true;
   }
-  new Notification("My UMK 通知測試", options);
+  new Notification("Yong's MY UMK 消息系統", options);
   return true;
 }
 
@@ -204,18 +204,24 @@ function BusSchedule({ now }: { now: Date }) {
   return (
     <section className="bus-section" aria-labelledby="bus-title">
       <div className="section-heading bus-heading">
-        <div><span className="eyebrow">SUNDAY—THURSDAY / SHUTTLE</span><h2 id="bus-title">Kampus Kota bus</h2></div>
+        <div><span className="eyebrow">FROM KEMUMIN TO UMK KAMPUS KOTA</span><h2 id="bus-title">Kampus Kota bus</h2></div>
       </div>
       <div className="bus-board">
         <div className="bus-directions">
           {busRoutes.map((route) => {
             const nextBus = getNextBus(now, route.direction);
-            const isLastBus = Boolean(nextBus && nextBus.departure === route.departures.at(-1));
+            const nextBusIndex = nextBus ? route.departures.indexOf(nextBus.departure) : -1;
+            const laterDepartures = [route.departures[nextBusIndex + 1], route.departures[nextBusIndex + 2]];
+            const isLastBus = Boolean(nextBus && nextBusIndex === route.departures.length - 1);
+            const isUrgent = Boolean(nextBus && nextBus.departureDate.getTime() - now.getTime() <= 5 * 60000);
             return <div className="bus-direction" key={route.direction}>
-              <div className={`next-bus-panel${isLastBus ? " last-bus" : ""}`}>
+              <div className={`next-bus-panel${isLastBus ? " last-bus" : ""}${isUrgent ? " urgent" : ""}`}>
                 <span className="bus-icon"><BusFront size={25} /></span>
                 <div className="bus-route"><small>{isLastBus ? "LAST DEPARTURE" : "NEXT DEPARTURE"}</small><strong>{route.from} <ArrowRight size={18} /> {route.to}</strong></div>
-                <time>{nextBus?.departure ?? "--:--"}<small>{nextBus ? `${isLastBus ? "LAST BUS · " : ""}IN ${busCountdown(now, nextBus.departureDate)}` : "NO SERVICE"}</small></time>
+                <time>{nextBus?.departure ?? "--:--"}<small>{isUrgent ? <span className="urgent-bus-cue"><i aria-hidden="true" /> HURRY · </span> : null}{nextBus ? `${isLastBus ? "LAST BUS · " : ""}IN ${busCountdown(now, nextBus.departureDate)}` : "NO SERVICE"}</small></time>
+              </div>
+              <div className="later-buses" aria-label={`Following ${route.shortLabel} departures`}>
+                {laterDepartures.map((departure, index) => <div className={`later-bus${departure ? "" : " unavailable"}`} key={index}><small>NEXT {index + 2}</small><strong>{departure ?? ""}</strong></div>)}
               </div>
               {route.direction === "toKampus" && recommendedBus ? <div className="class-bus-advice"><Bell size={16} /><span><strong>LEAVE FOR {recommendedBus.nextClass.session.code}</strong>Take the {recommendedBus.departure} bus for the {formatHour(recommendedBus.nextClass.session.start)} class at {recommendedBus.nextClass.session.mode}.</span><small>45 MIN BUFFER</small></div> : null}
             </div>;
@@ -312,7 +318,7 @@ function Agenda({ now }: { now: Date }) {
       </div>
       <div className="agenda-planner">
         <div className="agenda-planner-heading"><span><ClipboardList size={15} /> PLANNER</span><Link href="/planner">MANAGE <ArrowRight size={13} /></Link></div>
-        {visiblePlannerItems.length ? visiblePlannerItems.map((item) => { const dueAt = new Date(item.dueAt); return <div className={`agenda-planner-row${dueAt <= now ? " overdue" : ""}`} key={item.id}><button onClick={() => void completePlannerItem(item)} aria-label={`Complete ${item.title}`} title="Mark complete"><Check size={14} /></button><span><small>{item.kind.toUpperCase()} · {item.courseCode}</small><strong>{item.title}</strong></span><time dateTime={item.dueAt}>{dueAt.toLocaleDateString("en-MY", { day: "2-digit", month: "short" })}<strong>{dueAt.toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit", hour12: false })}</strong></time></div>; }) : <p className="empty-planner-agenda">No open planner deadlines.</p>}
+        {visiblePlannerItems.length ? visiblePlannerItems.map((item) => { const dueAt = new Date(item.dueAt); return <div className={`agenda-planner-row${dueAt <= now ? " overdue" : ""}`} key={item.id}><button onClick={() => void completePlannerItem(item)} aria-label={`Complete ${item.title}`} title="Mark complete"><Check size={14} /></button><span><small>{item.kind.toUpperCase()} · {item.courseCode}</small><strong>{item.title.toUpperCase()}</strong></span><time dateTime={item.dueAt}>{dueAt.toLocaleDateString("en-MY", { day: "2-digit", month: "short" })}<strong>{dueAt.toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit", hour12: false })}</strong></time></div>; }) : <p className="empty-planner-agenda">No open planner deadlines.</p>}
       </div>
     </section>
   );
