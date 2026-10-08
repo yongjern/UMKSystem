@@ -65,3 +65,19 @@ footer { margin-top:70px; min-height:80px; display:flex; justify-content:space-b
 	.timetable-scroll .timetable-canvas,
 	.timetable-scroll .timetable { width:830px; min-width:830px; }
 }
+
+.auth-panel { display:flex; align-items:center; flex-wrap:wrap; gap:8px; color:var(--muted); font:600 9px var(--font-mono),monospace; }
+.auth-form { padding:8px 0; }
+.auth-panel label { display:grid; gap:4px; color:var(--orange); }
+.auth-panel label span { font:600 8px var(--font-mono),monospace; }
+.auth-panel input { width:160px; min-height:32px; padding:0 8px; border:1px solid var(--line); background:#0d0c10; color:var(--cream); font:500 10px var(--font-mono),monospace; }
+.auth-panel button { min-height:32px; padding:0 10px; border:1px solid var(--orange); background:#0d0c10; color:var(--orange); cursor:pointer; font:600 9px var(--font-mono),monospace; }
+.auth-panel button:disabled { cursor:wait; opacity:.6; }
+.auth-panel small { flex-basis:100%; color:var(--muted); font:500 9px/1.5 var(--font-mono),monospace; }
+.auth-panel [role="alert"],.data-error { color:var(--red); }
+.auth-hint { color:var(--muted); font-size:12px; }
+.data-error { margin:12px 0; font-size:12px; }
+@media (max-width:720px) {
+	.auth-panel { justify-content:flex-start; }
+	.auth-panel input { width:min(42vw,180px); }
+}

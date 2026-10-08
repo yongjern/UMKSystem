@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@googleapis/calendar": "^10.0.0",
+    "@supabase/supabase-js": "^2.117.3",
     "google-auth-library": "10.5.0",
     "lucide-react": "^0.468.0",
     "next": "^16.0.0",
