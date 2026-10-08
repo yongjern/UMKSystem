@@ -391,7 +391,7 @@ export function Dashboard() {
   useEffect(() => {
     if ("Notification" in window) {
       const enabled = Notification.permission === "granted" && window.localStorage.getItem("umk-class-notifications") === "enabled";
-      setNotificationsEnabled(enabled);
+      window.setTimeout(() => setNotificationsEnabled(enabled), 0);
       if (Notification.permission === "granted") void showNotificationTest().catch((error) => console.error("Unable to show page-load notification", error));
     }
     if ("serviceWorker" in navigator) void navigator.serviceWorker.register("/sw.js");
