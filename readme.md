@@ -68,7 +68,7 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
 ```
 
-2. 在 Supabase **SQL Editor** 執行 [`supabase/schema.sql`](./supabase/schema.sql)。此腳本會建立資料表、Row Level Security policies，並寫入目前的課表、校車及快速連結 seed data。公開資料僅允許讀取；個人活動與 Planner 依登入使用者隔離。
+2. 在 Supabase **SQL Editor** 執行 [`supabase/schema.sql`](./supabase/schema.sql)。此腳本會建立資料表、Row Level Security policies，並寫入目前的課表、校車及快速連結 seed data。公開資料僅允許讀取；個人活動、Planner、Calendar 活動與自訂 Timetable 依登入使用者隔離。若先前已執行過舊版 schema，請重新執行一次以新增 `user_timetables` 和 `user_class_sessions`。
 3. 在 **Authentication > Providers** 啟用 Email，設定郵件 OTP/magic link；於 **Authentication > URL Configuration** 將本機與正式網站網址加入 Site URL / Redirect URLs。
 4. 複製 `.env.example` 為 `.env.local`，並在 Supabase Auth 設定郵件寄送服務後測試一次性登入連結。
 

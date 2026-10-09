@@ -83,8 +83,27 @@ create table if not exists public.planner_items (
   primary key (user_id, id)
 );
 
+create table if not exists public.user_timetables (
+  user_id uuid primary key references public.profiles(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.user_class_sessions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.user_timetables(user_id) on delete cascade,
+  day_of_week smallint not null check (day_of_week between 0 and 6),
+  start_hour numeric(4, 2) not null check (start_hour between 0 and 24),
+  end_hour numeric(4, 2) not null check (end_hour between 0 and 24),
+  course_code text not null references public.courses(course_code) on update cascade on delete cascade,
+  group_code text not null,
+  session_type text not null check (session_type in ('Lecture', 'Tutorial')),
+  mode text not null,
+  check (end_hour > start_hour)
+);
+
 create index if not exists custom_events_user_starts_idx on public.custom_events(user_id, starts_at);
 create index if not exists planner_items_user_due_idx on public.planner_items(user_id, due_at);
+create index if not exists user_class_sessions_user_day_idx on public.user_class_sessions(user_id, day_of_week, start_hour);
 
 alter table public.courses enable row level security;
 alter table public.class_sessions enable row level security;
@@ -95,6 +114,8 @@ alter table public.bus_departures enable row level security;
 alter table public.profiles enable row level security;
 alter table public.custom_events enable row level security;
 alter table public.planner_items enable row level security;
+alter table public.user_timetables enable row level security;
+alter table public.user_class_sessions enable row level security;
 
 do $$
 declare
@@ -125,11 +146,16 @@ drop policy if exists "Users can manage their custom events" on public.custom_ev
 create policy "Users can manage their custom events" on public.custom_events for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
 drop policy if exists "Users can manage their planner items" on public.planner_items;
 create policy "Users can manage their planner items" on public.planner_items for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "Users can manage their timetable" on public.user_timetables;
+create policy "Users can manage their timetable" on public.user_timetables for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "Users can manage their class sessions" on public.user_class_sessions;
+create policy "Users can manage their class sessions" on public.user_class_sessions for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 grant select on public.courses, public.class_sessions, public.quick_links,
   public.bus_routes, public.bus_operating_days, public.bus_departures to anon, authenticated;
 grant select, insert, update on public.profiles to authenticated;
-grant select, insert, update, delete on public.custom_events, public.planner_items to authenticated;
+grant select, insert, update, delete on public.custom_events, public.planner_items,
+  public.user_timetables, public.user_class_sessions to authenticated;
 
 insert into public.courses (course_code, name, lecture_url, tutorial_url, meet_url) values
   ('ATF10203', 'ASAS KEUSAHAWANAN', 'https://ecampus.umk.edu.my/course/view.php?id=111126122', 'https://ecampus.umk.edu.my/course/view.php?id=111126123', 'https://meet.google.com/cxf-dvjn-wtt'),

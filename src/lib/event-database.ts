@@ -1,6 +1,7 @@
 "use client";
 
 import type { CalendarEvent } from "@/lib/calendar";
+import type { ClassSession } from "@/data/schedule";
 import { getSupabaseClient } from "@/lib/supabase";
 
 const databaseName = "umk-dashboard";
@@ -113,16 +114,11 @@ export async function migrateLocalData(userId: string) {
   if (plannerItems.length) await clearLocalItems(plannerStoreName);
 }
 
-export async function getCustomEvents(userId: string, now = new Date()) {
-  const supabase = getSupabaseClient();
-  const { error: cleanupError } = await supabase.from("custom_events").delete().eq("user_id", userId).lt("ends_at", now.toISOString());
-  throwIfError(cleanupError, "Unable to remove expired events");
-
-  const { data, error } = await supabase
+export async function getCustomEvents(userId: string) {
+  const { data, error } = await getSupabaseClient()
     .from("custom_events")
     .select("id, title, location, starts_at, ends_at, all_day")
     .eq("user_id", userId)
-    .gte("ends_at", now.toISOString())
     .order("starts_at");
   throwIfError(error, "Unable to load events");
   if (!data) throw new Error("Supabase returned no event data.");
@@ -136,8 +132,8 @@ export async function getCustomEvents(userId: string, now = new Date()) {
   })) satisfies CalendarEvent[];
 }
 
-export async function addCustomEvent(event: CalendarEvent, userId: string) {
-  const { error } = await getSupabaseClient().from("custom_events").insert({
+export async function saveCustomEvent(event: CalendarEvent, userId: string) {
+  const { error } = await getSupabaseClient().from("custom_events").upsert({
     id: event.id,
     user_id: userId,
     title: event.title,
@@ -192,4 +188,45 @@ export async function savePlannerItem(item: PlannerItem, userId: string) {
 export async function deletePlannerItem(id: string, userId: string) {
   const { error } = await getSupabaseClient().from("planner_items").delete().eq("id", id).eq("user_id", userId);
   throwIfError(error, "Unable to delete planner item");
+}
+
+export async function initializePersonalTimetable(userId: string, sessions: ClassSession[]) {
+  const supabase = getSupabaseClient();
+  const { error: timetableError } = await supabase.from("user_timetables").insert({ user_id: userId });
+  throwIfError(timetableError, "Unable to create your timetable");
+  if (!sessions.length) return;
+  const { error } = await supabase.from("user_class_sessions").insert(sessions.map((session) => ({
+    user_id: userId,
+    day_of_week: session.day,
+    start_hour: session.start,
+    end_hour: session.end,
+    course_code: session.code,
+    group_code: session.group,
+    session_type: session.type,
+    mode: session.mode,
+  })));
+  throwIfError(error, "Unable to copy the default timetable");
+}
+
+export async function saveClassSession(session: ClassSession, userId: string) {
+  const values = {
+    user_id: userId,
+    day_of_week: session.day,
+    start_hour: session.start,
+    end_hour: session.end,
+    course_code: session.code,
+    group_code: session.group,
+    session_type: session.type,
+    mode: session.mode,
+  };
+  const query = session.id
+    ? getSupabaseClient().from("user_class_sessions").update(values).eq("id", session.id).eq("user_id", userId)
+    : getSupabaseClient().from("user_class_sessions").insert(values);
+  const { error } = await query;
+  throwIfError(error, "Unable to save class session");
+}
+
+export async function deleteClassSession(id: string, userId: string) {
+  const { error } = await getSupabaseClient().from("user_class_sessions").delete().eq("id", id).eq("user_id", userId);
+  throwIfError(error, "Unable to delete class session");
 }

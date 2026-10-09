@@ -14,6 +14,7 @@ type CourseRow = {
 };
 
 type ClassSessionRow = {
+  id: string;
   day_of_week: number;
   start_hour: number;
   end_hour: number;
@@ -61,20 +62,22 @@ export type DashboardConfig = {
   quickLinks: QuickLink[];
   busRoutes: BusRoute[];
   busOperatingDays: number[];
+  isPersonalTimetable: boolean;
 };
 
-export async function getDashboardConfig(): Promise<DashboardConfig> {
+export async function getDashboardConfig(userId?: string): Promise<DashboardConfig> {
   const supabase = getSupabaseClient();
-  const [coursesResult, sessionsResult, linksResult, routesResult, departuresResult, daysResult] = await Promise.all([
+  const [coursesResult, sessionsResult, linksResult, routesResult, departuresResult, daysResult, timetableResult] = await Promise.all([
     supabase.from("courses").select("*").order("course_code").returns<CourseRow[]>(),
     supabase.from("class_sessions").select("*").order("day_of_week").order("start_hour").returns<ClassSessionRow[]>(),
     supabase.from("quick_links").select("*").order("sort_order").returns<QuickLinkRow[]>(),
     supabase.from("bus_routes").select("*").order("direction").returns<BusRouteRow[]>(),
     supabase.from("bus_departures").select("*").order("sort_order").returns<BusDepartureRow[]>(),
     supabase.from("bus_operating_days").select("*").returns<OperatingDayRow[]>(),
+    userId ? supabase.from("user_timetables").select("user_id").eq("user_id", userId).maybeSingle() : Promise.resolve({ data: null, error: null }),
   ]);
 
-  const error = coursesResult.error ?? sessionsResult.error ?? linksResult.error ?? routesResult.error ?? departuresResult.error ?? daysResult.error;
+  const error = coursesResult.error ?? sessionsResult.error ?? linksResult.error ?? routesResult.error ?? departuresResult.error ?? daysResult.error ?? timetableResult.error;
   if (error) throw new Error(`Unable to load dashboard data: ${error.message}`);
   const coursesData = coursesResult.data;
   const sessionsData = sessionsResult.data;
@@ -84,6 +87,12 @@ export async function getDashboardConfig(): Promise<DashboardConfig> {
   const daysData = daysResult.data;
   if (!coursesData || !sessionsData || !linksData || !routesData || !departuresData || !daysData) {
     throw new Error("Supabase returned incomplete dashboard data.");
+  }
+  let activeSessions = sessionsData;
+  if (userId && timetableResult.data) {
+    const { data, error: personalSessionsError } = await supabase.from("user_class_sessions").select("*").eq("user_id", userId).order("day_of_week").order("start_hour").returns<ClassSessionRow[]>();
+    if (personalSessionsError) throw new Error(`Unable to load your timetable: ${personalSessionsError.message}`);
+    activeSessions = data ?? [];
   }
 
   const courses = coursesData.map((row) => ({
@@ -104,7 +113,8 @@ export async function getDashboardConfig(): Promise<DashboardConfig> {
 
   return {
     courses,
-    classSchedule: sessionsData.map((row) => ({
+    classSchedule: activeSessions.map((row) => ({
+      id: row.id,
       day: row.day_of_week as ClassSession["day"],
       start: Number(row.start_hour),
       end: Number(row.end_hour),
@@ -129,5 +139,6 @@ export async function getDashboardConfig(): Promise<DashboardConfig> {
       departures: departuresByRoute.get(row.direction) ?? [],
     })),
     busOperatingDays: daysData.map((row) => row.day_of_week),
+    isPersonalTimetable: Boolean(timetableResult.data),
   };
 }
