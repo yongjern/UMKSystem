@@ -21,7 +21,7 @@ export function AuthPanel() {
       const { error: signInError } = await getSupabaseClient().auth.signInWithOtp({
         email: email.trim(),
         options: {
-          emailRedirectTo: window.location.origin,
+          emailRedirectTo: `${window.location.origin}/login`,
           data: { matric_no: matricNo.trim().toUpperCase() },
         },
       });

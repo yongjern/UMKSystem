@@ -3,7 +3,7 @@
 import { ArrowLeft, CalendarClock, Check, ClipboardList, ExternalLink, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { type FormEvent, useEffect, useState } from "react";
-import { AuthPanel } from "@/components/auth-panel";
+import { AccountButton } from "@/components/account-button";
 import { useAuth } from "@/lib/auth-context";
 import { getDashboardConfig, type Course } from "@/lib/dashboard-data";
 import { deletePlannerItem, getPlannerItems, migrateLocalData, savePlannerItem, type PlannerItem } from "@/lib/event-database";
@@ -128,10 +128,8 @@ export function Planner() {
       <header className="planner-header">
         <Link href="/" className="back-link"><ArrowLeft size={17} /> DASHBOARD</Link>
         <div><span className="eyebrow">PLANNER</span><h1>MAKE YOUR PLAN, DO YOUR PLAN.</h1></div>
-        <span className="planner-count">{activeItems.length.toString().padStart(2, "0")} ACTIVE</span>
+        <div className="planner-account"><span className="planner-count">{activeItems.length.toString().padStart(2, "0")} ACTIVE</span><AccountButton /></div>
       </header>
-
-      <AuthPanel />
       {error ? <p className="data-error" role="alert">{error}</p> : null}
       {nextExam ? <section className="exam-countdown"><CalendarClock size={30} /><div><span>NEXT EXAM</span><h2>{nextExam.title.toUpperCase()}</h2><p>{nextExam.courseCode} · {new Date(nextExam.dueAt).toLocaleString("en-MY", { dateStyle: "medium", timeStyle: "short" })}</p></div><strong>{timeRemaining(nextExam.dueAt, now)}</strong></section> : null}
 
@@ -145,7 +143,7 @@ export function Planner() {
           <label><span>HYPERLINK</span><input type="url" value={hyperlink} onChange={(event) => setHyperlink(event.target.value)} placeholder="https://..." pattern="https?://.*" /></label>
           <label><span>NOTES</span><textarea value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Submission notes or exam venue" rows={3} /></label>
           <button type="submit"><Plus size={17} /> ADD TO PLANNER</button>
-        </form> : <section className="planner-form"><div><span className="eyebrow">PRIVATE PLANNER</span><h2>{authLoading ? "Checking sign-in…" : "Sign in to view your plans"}</h2></div><p>Your assignments, exams and events are private to your account.</p></section>}
+        </form> : <section className="planner-form"><div><span className="eyebrow">PRIVATE PLANNER</span><h2>{authLoading ? "Checking sign-in…" : "Sign in to view your plans"}</h2></div><p>Your assignments, exams and events are private to your account.</p><Link className="planner-login-link" href="/login">SIGN IN TO PLANNER</Link></section>}
 
         <section className="planner-list" aria-labelledby="planner-list-title">
           <div className="planner-list-heading"><div><span className="eyebrow">YOUR PLAN HERE :3</span><h2 id="planner-list-title">DO IT BEFORE DEADLINE.</h2></div><ClipboardList size={25} /></div>
