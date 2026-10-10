@@ -1,14 +1,17 @@
 "use client";
 
-import { ArrowRight, ArrowUpRight, Bell, BellRing, BookOpen, BusFront, CalendarDays, Check, ClipboardList, Clock3, Download, ExternalLink, FileText, GraduationCap, MapPin, MessageCircle, MoonStar, Plus, Radio, Sparkles, Trash2, Video, Wifi } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Bell, BellRing, BookOpen, BusFront, CalendarDays, Check, ClipboardList, Clock3, Download, ExternalLink, FileText, GraduationCap, MapPin, MessageCircle, MoonStar, Pencil, Plus, Radio, Sparkles, Trash2, Video, Wifi } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { type FormEvent, useEffect, useState } from "react";
-import { quickLinks, type QuickLink } from "@/data/links";
-import { busOperatingDays, busRoutes, type BusDirection } from "@/data/bus-schedule";
-import { classSchedule, courseLinks, courseMeetLinks, courseNames, dayNames, type ClassSession } from "@/data/schedule";
-import { addCustomEvent as addEventToDatabase, deleteCustomEvent, getCustomEvents, getPlannerItems, migrateLegacyEvents, savePlannerItem, type PlannerItem } from "@/lib/event-database";
+import { type QuickLink } from "@/data/links";
+import { type BusDirection } from "@/data/bus-schedule";
+import { dayNames, type ClassSession } from "@/data/schedule";
+import { deleteCustomEvent, getCustomEvents, getPlannerItems, migrateLocalData, saveCustomEvent as addEventToDatabase, savePlannerItem, type PlannerItem } from "@/lib/event-database";
 import type { CalendarEvent } from "@/lib/calendar";
+import { getDashboardConfig, type DashboardConfig } from "@/lib/dashboard-data";
+import { useAuth } from "@/lib/auth-context";
+import { AccountButton } from "@/components/account-button";
 
 const icons = { book: BookOpen, calendar: CalendarDays, campus: GraduationCap, file: FileText, message: MessageCircle, sparkles: Sparkles, video: Video, wifi: Wifi };
 type InstallPromptEvent = Event & {
@@ -40,7 +43,7 @@ function sessionDate(session: ClassSession, reference: Date, weekOffset = 0) {
   return date;
 }
 
-function getNextSession(now: Date) {
+function getNextSession(now: Date, classSchedule: ClassSession[]) {
   const candidates = classSchedule.flatMap((session) => {
     const start = sessionDate(session, now);
     const end = new Date(start);
@@ -53,15 +56,16 @@ function getNextSession(now: Date) {
   return candidates.filter(({ end }) => end > now).sort((a, b) => a.start.getTime() - b.start.getTime())[0];
 }
 
-function getRecommendedBus(now: Date) {
-  if (!busOperatingDays.includes(now.getDay() as (typeof busOperatingDays)[number])) return null;
-  const firstPhysicalClass = classSchedule
+function getRecommendedBus(now: Date, config: DashboardConfig) {
+  if (!config.busOperatingDays.includes(now.getDay())) return null;
+  const firstPhysicalClass = config.classSchedule
     .filter((session) => session.day === now.getDay() && !/^(Online|Async)/i.test(session.mode))
     .sort((first, second) => first.start - second.start)[0];
   if (!firstPhysicalClass) return null;
   const classStart = new Date(now);
   classStart.setHours(Math.floor(firstPhysicalClass.start), Math.round((firstPhysicalClass.start % 1) * 60), 0, 0);
-  const route = busRoutes.find((item) => item.direction === "toKampus") ?? busRoutes[0];
+  const route = config.busRoutes.find((item) => item.direction === "toKampus");
+  if (!route) return null;
   const arrivalCutoff = new Date(classStart.getTime() - 45 * 60000);
   const departures = route.departures.map((departure) => {
     const [hours, minutes] = departure.split(":").map(Number);
@@ -89,12 +93,13 @@ function isTomorrow(now: Date, date: Date) {
   return tomorrow.toDateString() === date.toDateString();
 }
 
-function getNextBus(now: Date, direction: BusDirection) {
-  const route = busRoutes.find((item) => item.direction === direction) ?? busRoutes[0];
+function getNextBus(now: Date, direction: BusDirection, config: DashboardConfig) {
+  const route = config.busRoutes.find((item) => item.direction === direction);
+  if (!route) return null;
   for (let dayOffset = 0; dayOffset < 8; dayOffset += 1) {
     const serviceDate = new Date(now);
     serviceDate.setDate(now.getDate() + dayOffset);
-    if (!busOperatingDays.includes(serviceDate.getDay() as (typeof busOperatingDays)[number])) continue;
+    if (!config.busOperatingDays.includes(serviceDate.getDay())) continue;
     for (const departure of route.departures) {
       const [hours, minutes] = departure.split(":").map(Number);
       const departureDate = new Date(serviceDate);
@@ -154,9 +159,10 @@ function QuickLinkCard({ link }: { link: QuickLink }) {
   );
 }
 
-function Timetable({ now }: { now: Date }) {
+function Timetable({ now, config }: { now: Date; config: DashboardConfig }) {
   const [selectedSession, setSelectedSession] = useState<ClassSession | null>(null);
-  const selectedCourseLink = selectedSession ? courseLinks[selectedSession.code]?.[selectedSession.type] : undefined;
+  const selectedCourse = selectedSession ? config.courses.find((course) => course.code === selectedSession.code) : undefined;
+  const selectedCourseLink = selectedSession ? selectedCourse?.links[selectedSession.type] : undefined;
   const currentHour = now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
   const showTimeLine = currentHour >= 8 && currentHour < 22;
   const linePosition = 7.5 + ((currentHour - 8) / 14) * 92.5;
@@ -169,15 +175,16 @@ function Timetable({ now }: { now: Date }) {
         <thead><tr><th scope="col">DAY</th>{timeSlots.map((hour) => <th scope="col" key={hour}>{hour.toString().padStart(2, "0")}</th>)}</tr></thead>
         <tbody>
           {dayNames.map((day, dayIndex) => {
-            const sessions = classSchedule.filter((session) => session.day === dayIndex);
+            const sessions = config.classSchedule.filter((session) => session.day === dayIndex);
             const cells = [];
             let hour = 8;
             while (hour < 22) {
               const session = sessions.find((item) => item.start === hour);
               if (session) {
                 const span = session.end - session.start;
-                const colors = courseColors[session.code];
-                cells.push(<td className="class-cell" style={{ backgroundColor: colors.background, borderLeftColor: colors.accent }} colSpan={span} key={`${day}-${hour}`} tabIndex={0} onMouseEnter={() => setSelectedSession(session)} onFocus={() => setSelectedSession(session)} onClick={() => setSelectedSession(session)} aria-label={`${session.code}, ${courseNames[session.code]}, ${session.type}, group ${session.group}, ${formatHour(session.start)} to ${formatHour(session.end)}, ${session.mode}`}><strong>{session.code}</strong><span>{session.group} · {session.mode}</span></td>);
+                const colors = courseColors[session.code] ?? { background: "#222c51", accent: "#7f9cff" };
+                const courseName = config.courses.find((course) => course.code === session.code)?.name ?? session.code;
+                cells.push(<td className="class-cell" style={{ backgroundColor: colors.background, borderLeftColor: colors.accent }} colSpan={span} key={`${day}-${hour}`} tabIndex={0} onMouseEnter={() => setSelectedSession(session)} onFocus={() => setSelectedSession(session)} onClick={() => setSelectedSession(session)} aria-label={`${session.code}, ${courseName}, ${session.type}, group ${session.group}, ${formatHour(session.start)} to ${formatHour(session.end)}, ${session.mode}`}><strong>{session.code}</strong><span>{session.group} · {session.mode}</span></td>);
                 hour += span;
               } else {
                 cells.push(<td className="empty-cell" key={`${day}-${hour}`} aria-label={`${day} ${hour}:00 empty`} />);
@@ -192,14 +199,14 @@ function Timetable({ now }: { now: Date }) {
         </div>
       </div>
       <div className={`course-details${selectedSession ? " active" : ""}`} aria-live="polite">
-        {selectedSession ? <><div><span className="eyebrow">{selectedSession.code} / {selectedSession.type.toUpperCase()}</span><strong>{courseNames[selectedSession.code]}</strong></div><dl><div><dt>GROUP</dt><dd>{selectedSession.group}</dd></div><div><dt>TIME</dt><dd>{formatHour(selectedSession.start)}—{formatHour(selectedSession.end)}</dd></div><div><dt>LOCATION</dt><dd>{selectedSession.mode}</dd></div></dl>{selectedCourseLink ? <a className="course-link" href={selectedCourseLink} target="_blank" rel="noreferrer">E-CAMPUS <ArrowUpRight size={15} /></a> : null}</> : <p>Hover, focus, or tap a class to view its details.</p>}
+        {selectedSession ? <><div><span className="eyebrow">{selectedSession.code} / {selectedSession.type.toUpperCase()}</span><strong>{selectedCourse?.name ?? selectedSession.code}</strong></div><dl><div><dt>GROUP</dt><dd>{selectedSession.group}</dd></div><div><dt>TIME</dt><dd>{formatHour(selectedSession.start)}—{formatHour(selectedSession.end)}</dd></div><div><dt>LOCATION</dt><dd>{selectedSession.mode}</dd></div></dl>{selectedCourseLink ? <a className="course-link" href={selectedCourseLink} target="_blank" rel="noreferrer">E-CAMPUS <ArrowUpRight size={15} /></a> : null}</> : <p>Hover, focus, or tap a class to view its details.</p>}
       </div>
     </div>
   );
 }
 
-function BusSchedule({ now }: { now: Date }) {
-  const recommendedBus = getRecommendedBus(now);
+function BusSchedule({ now, config }: { now: Date; config: DashboardConfig }) {
+  const recommendedBus = getRecommendedBus(now, config);
 
   return (
     <section className="bus-section" aria-labelledby="bus-title">
@@ -208,8 +215,8 @@ function BusSchedule({ now }: { now: Date }) {
       </div>
       <div className="bus-board">
         <div className="bus-directions">
-          {busRoutes.map((route) => {
-            const nextBus = getNextBus(now, route.direction);
+          {config.busRoutes.map((route) => {
+            const nextBus = getNextBus(now, route.direction, config);
             const nextBusIndex = nextBus ? route.departures.indexOf(nextBus.departure) : -1;
             const laterDepartures = [route.departures[nextBusIndex + 1], route.departures[nextBusIndex + 2]];
             const isLastBus = Boolean(nextBus && nextBusIndex === route.departures.length - 1);
@@ -233,39 +240,56 @@ function BusSchedule({ now }: { now: Date }) {
   );
 }
 
-function Agenda({ now }: { now: Date }) {
+function Agenda({ now, config }: { now: Date; config: DashboardConfig }) {
+  const { session, loading: authLoading } = useAuth();
+  const userId = session?.user.id;
   const [view, setView] = useState<"today" | "week">("today");
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [customEvents, setCustomEvents] = useState<CalendarEvent[]>([]);
   const [plannerItems, setPlannerItems] = useState<PlannerItem[]>([]);
+  const [dataUserId, setDataUserId] = useState<string | null>(null);
   const [source, setSource] = useState<"google" | "seed">("seed");
   const [title, setTitle] = useState("");
   const [dateTime, setDateTime] = useState("");
   const [endDateTime, setEndDateTime] = useState("");
   const [location, setLocation] = useState("");
+  const [personalError, setPersonalError] = useState("");
+
   useEffect(() => {
     fetch("/api/calendar").then((response) => response.json()).then((data: { events?: CalendarEvent[]; source?: "google" | "seed" }) => {
       if (data.events?.length) setEvents(data.events);
       if (data.source) setSource(data.source);
     }).catch(() => setSource("seed"));
+  }, []);
+
+  useEffect(() => {
+    if (!userId) return;
+    let active = true;
     const loadEvents = async () => {
       try {
-        await migrateLegacyEvents();
-        setCustomEvents(await getCustomEvents());
-        setPlannerItems(await getPlannerItems());
-      } catch {
-        setCustomEvents([]);
-        setPlannerItems([]);
+        await migrateLocalData(userId);
+        const [savedEvents, savedPlannerItems] = await Promise.all([getCustomEvents(userId), getPlannerItems(userId)]);
+        if (active) {
+          setCustomEvents(savedEvents);
+          setPlannerItems(savedPlannerItems);
+          setDataUserId(userId);
+          setPersonalError("");
+        }
+      } catch (cause) {
+        if (active) setPersonalError(cause instanceof Error ? cause.message : "Unable to load your events.");
       }
     };
     void loadEvents();
     const cleanupTimer = window.setInterval(() => void loadEvents(), 60000);
-    return () => window.clearInterval(cleanupTimer);
-  }, []);
+    return () => {
+      active = false;
+      window.clearInterval(cleanupTimer);
+    };
+  }, [userId]);
 
   async function addCustomEvent(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!title.trim() || !dateTime || !endDateTime) return;
+    if (!userId || !title.trim() || !dateTime || !endDateTime) return;
     const start = new Date(dateTime).toISOString();
     const end = new Date(endDateTime).toISOString();
     if (new Date(end) <= new Date(start)) return;
@@ -277,44 +301,68 @@ function Agenda({ now }: { now: Date }) {
       end,
       allDay: false,
     };
-    await addEventToDatabase(customEvent);
-    setCustomEvents((currentEvents) => [...currentEvents, customEvent]);
-    setTitle("");
-    setDateTime("");
-    setEndDateTime("");
-    setLocation("");
+    try {
+      await addEventToDatabase(customEvent, userId);
+      setCustomEvents((currentEvents) => [...currentEvents, customEvent]);
+      setTitle("");
+      setDateTime("");
+      setEndDateTime("");
+      setLocation("");
+      setPersonalError("");
+    } catch (cause) {
+      setPersonalError(cause instanceof Error ? cause.message : "Unable to save event.");
+    }
   }
 
   async function removeCustomEvent(id: string) {
-    await deleteCustomEvent(id);
-    setCustomEvents((currentEvents) => currentEvents.filter((event) => event.id !== id));
+    if (!userId) return;
+    try {
+      await deleteCustomEvent(id, userId);
+      setCustomEvents((currentEvents) => currentEvents.filter((event) => event.id !== id));
+      setPersonalError("");
+    } catch (cause) {
+      setPersonalError(cause instanceof Error ? cause.message : "Unable to delete event.");
+    }
   }
 
   async function completePlannerItem(item: PlannerItem) {
+    if (!userId) return;
     const completedItem = { ...item, completed: true };
-    await savePlannerItem(completedItem);
-    setPlannerItems((currentItems) => currentItems.map((currentItem) => currentItem.id === item.id ? completedItem : currentItem));
+    try {
+      await savePlannerItem(completedItem, userId);
+      setPlannerItems((currentItems) => currentItems.map((currentItem) => currentItem.id === item.id ? completedItem : currentItem));
+      setPersonalError("");
+    } catch (cause) {
+      setPersonalError(cause instanceof Error ? cause.message : "Unable to update planner item.");
+    }
   }
 
-  const seedEvents = classSchedule.filter((session) => view === "week" || session.day === now.getDay()).map((session) => ({ id: `${session.day}-${session.start}-${session.code}`, title: session.code, location: session.mode, start: sessionDate(session, now).toISOString(), end: "", allDay: false }));
+  const seedEvents = config.classSchedule.filter((session) => view === "week" || session.day === now.getDay()).map((session) => ({ id: `${session.day}-${session.start}-${session.code}`, title: session.code, location: session.mode, start: sessionDate(session, now).toISOString(), end: "", allDay: false }));
   const weekEnd = new Date(now);
   weekEnd.setDate(now.getDate() + 7);
-  const visibleEvents = [...(source === "google" ? events : seedEvents), ...customEvents]
+  const accountEvents = dataUserId === userId ? customEvents : [];
+  const accountPlannerItems = dataUserId === userId ? plannerItems : [];
+  const visibleAccountEvents = [...(source === "google" ? events : seedEvents), ...accountEvents]
     .filter((event) => view === "today" ? new Date(event.start).toDateString() === now.toDateString() : new Date(event.start) >= now && new Date(event.start) < weekEnd)
     .sort((first, second) => new Date(first.start).getTime() - new Date(second.start).getTime());
-  const visiblePlannerItems = plannerItems.filter((item) => !item.completed);
+  const visiblePlannerItems = accountPlannerItems.filter((item) => !item.completed);
   return (
     <section className="agenda" aria-labelledby="agenda-title">
-      <div className="section-heading compact"><div><span className="eyebrow">AGENDA / {source === "google" ? "GOOGLE SYNC" : "LOCAL SCHEDULE"}</span><h2 id="agenda-title">Schedule view</h2></div><div className="view-toggle" aria-label="Agenda range"><button className={view === "today" ? "active" : ""} onClick={() => setView("today")}>TODAY</button><button className={view === "week" ? "active" : ""} onClick={() => setView("week")}>WEEK</button></div></div>
-      <form className="event-form" onSubmit={addCustomEvent}>
+      <div className="section-heading compact"><div><span className="eyebrow">AGENDA / {source === "google" ? "GOOGLE SYNC" : "SUPABASE SCHEDULE"}</span><h2 id="agenda-title">Schedule view</h2></div><div className="view-toggle" aria-label="Agenda range"><button className={view === "today" ? "active" : ""} onClick={() => setView("today")}>TODAY</button><button className={view === "week" ? "active" : ""} onClick={() => setView("week")}>WEEK</button></div></div>
+      {userId ? <form className="event-form" onSubmit={(event) => void addCustomEvent(event)}>
         <label><span>EVENT</span><input type="text" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Event title" required /></label>
         <label><span>START</span><input type="datetime-local" value={dateTime} onChange={(event) => setDateTime(event.target.value)} required /></label>
         <label><span>END</span><input type="datetime-local" min={dateTime} value={endDateTime} onChange={(event) => setEndDateTime(event.target.value)} required /></label>
         <label><span>LOCATION</span><input type="text" value={location} onChange={(event) => setLocation(event.target.value)} placeholder="Optional" /></label>
         <button type="submit" title="Add event"><Plus size={18} /><span>ADD EVENT</span></button>
-      </form>
+      </form> : <p className="auth-hint">{authLoading ? "Checking sign-in…" : "Sign in with your student email to save private events and planner items."}</p>}
+      {personalError ? <p className="data-error" role="alert">{personalError}</p> : null}
       <div className="agenda-list">
-        {visibleEvents.length ? visibleEvents.map((event) => { const start = new Date(event.start); const isCustom = event.id.startsWith("custom-"); return <div className="agenda-row" key={event.id}><time>{start.toLocaleDateString("en-MY", { weekday: "short" })}<strong>{start.toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit", hour12: false })}</strong></time><span><strong>{event.title}</strong><small><MapPin size={13} /> {event.location}</small></span>{isCustom ? <button className="delete-event" onClick={() => removeCustomEvent(event.id)} title="Delete event" aria-label={`Delete ${event.title}`}><Trash2 size={15} /></button> : null}</div>; }) : <p className="empty-agenda">No events scheduled for this view.</p>}
+        {visibleAccountEvents.length ? visibleAccountEvents.map((event) => {
+          const start = new Date(event.start);
+          const isCustom = event.id.startsWith("custom-");
+          return <div className="agenda-row" key={event.id}><time>{start.toLocaleDateString("en-MY", { weekday: "short" })}<strong>{start.toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit", hour12: false })}</strong></time><span><strong>{event.title}</strong><small><MapPin size={13} /> {event.location}</small></span>{isCustom ? <button className="delete-event" onClick={() => void removeCustomEvent(event.id)} title="Delete event" aria-label={`Delete ${event.title}`}><Trash2 size={15} /></button> : null}</div>;
+        }) : <p className="empty-agenda">No events scheduled for this view.</p>}
       </div>
       <div className="agenda-planner">
         <div className="agenda-planner-heading"><span><ClipboardList size={15} /> PLANNER</span><Link href="/planner">MANAGE <ArrowRight size={13} /></Link></div>
@@ -325,14 +373,27 @@ function Agenda({ now }: { now: Date }) {
 }
 
 export function Dashboard() {
+  const [config, setConfig] = useState<DashboardConfig | null>(null);
+  const [configError, setConfigError] = useState("");
   const [now, setNow] = useState<Date | null>(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null);
+  const { session } = useAuth();
+  const userId = session?.user.id;
+  useEffect(() => {
+    let active = true;
+    void getDashboardConfig(userId).then((data) => {
+      if (active) setConfig(data);
+    }).catch((cause: unknown) => {
+      if (active) setConfigError(cause instanceof Error ? cause.message : "Unable to load dashboard data.");
+    });
+    return () => { active = false; };
+  }, [userId]);
   useEffect(() => { const update = () => setNow(new Date()); update(); const timer = window.setInterval(update, 1000); return () => window.clearInterval(timer); }, []);
   useEffect(() => {
     if ("Notification" in window) {
       const enabled = Notification.permission === "granted" && window.localStorage.getItem("umk-class-notifications") === "enabled";
-      setNotificationsEnabled(enabled);
+      window.setTimeout(() => setNotificationsEnabled(enabled), 0);
       if (Notification.permission === "granted") void showNotificationTest().catch((error) => console.error("Unable to show page-load notification", error));
     }
     if ("serviceWorker" in navigator) void navigator.serviceWorker.register("/sw.js");
@@ -340,10 +401,11 @@ export function Dashboard() {
     window.addEventListener("beforeinstallprompt", captureInstallPrompt);
     return () => window.removeEventListener("beforeinstallprompt", captureInstallPrompt);
   }, []);
-  const next = now ? getNextSession(now) : null;
+  const next = now && config ? getNextSession(now, config.classSchedule) : undefined;
   const showGoodNight = Boolean(now && next && isTomorrow(now, next.start));
-  const nextCourseLink = next ? courseLinks[next.session.code]?.[next.session.type] : undefined;
-  const nextMeetLink = next ? courseMeetLinks[next.session.code] : undefined;
+  const nextCourse = next && config ? config.courses.find((course) => course.code === next.session.code) : undefined;
+  const nextCourseLink = next ? nextCourse?.links[next.session.type] : undefined;
+  const nextMeetLink = nextCourse?.meetLink;
   useEffect(() => {
     if (!("Notification" in window) || !now || !next || !notificationsEnabled || Notification.permission !== "granted" || now >= next.start) return;
     const minutes = Math.ceil((next.start.getTime() - now.getTime()) / 60000);
@@ -396,11 +458,12 @@ export function Dashboard() {
     <main className="dashboard-shell">
       <header className="site-header"><div className="brand-lockup"><Image src="https://corporate.umk.edu.my/download/logo%20UMK%20(Menegak)_1bu43dewg9ja8.png" alt="Universiti Malaysia Kelantan" width={596} height={843} priority unoptimized /><div><span>PERSONAL OPERATIONS BOARD</span><h1>My UMK</h1></div></div><div className="live-clock" aria-label="Current date and time"><span><Radio size={12} fill="currentColor" /> LIVE</span><strong>{now ? now.toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }) : "--:--:--"}</strong><small>{now ? now.toLocaleDateString("en-MY", { weekday: "long", day: "2-digit", month: "short" }).toUpperCase() : "LOADING"}</small></div></header>
       <div className="signal-divider" aria-hidden="true" />
-      <nav className="dashboard-tools" aria-label="Dashboard tools"><Link href="/planner"><ClipboardList size={16} /> PLANNER</Link><button onClick={() => void enableNotifications()} className={notificationsEnabled ? "active" : ""}>{notificationsEnabled ? <BellRing size={16} /> : <Bell size={16} />} {notificationsEnabled ? "REMINDERS ON" : "CLASS REMINDERS"}</button>{installPrompt ? <button onClick={() => void installApp()}><Download size={16} /> INSTALL APP</button> : null}</nav>
-      {showGoodNight ? <section className="next-class good-night" aria-labelledby="next-title"><div className="night-icon"><MoonStar size={38} /></div><div className="next-main"><h2 id="next-title">晚安，明天見。</h2></div></section> : <section className="next-class" aria-labelledby="next-title"><div className="next-status"><span className="eyebrow"><Clock3 size={14} /> NEXT ON SCHEDULE</span><strong>{now && next ? countdownLabel(now, next.start, next.end) : "CALCULATING"}</strong></div><div className="next-main"><span className="day-number">{next ? next.start.getDate().toString().padStart(2, "0") : "--"}</span><div><h2 id="next-title">{next?.session.code ?? "Loading schedule"}</h2><p>{next ? `${next.session.type} · Group ${next.session.group}` : "Semester September · Session 2026/2027"}</p></div></div><div className="next-meta"><span><Clock3 size={15} /> {next ? `${formatHour(next.session.start)}—${formatHour(next.session.end)}` : "--:--"}</span><span><MapPin size={15} /> {next?.session.mode ?? "Checking"}</span>{next && (nextMeetLink || nextCourseLink) ? <div className="next-actions">{nextMeetLink ? <a className="meet-action" href={nextMeetLink} target="_blank" rel="noreferrer" aria-label={`Join ${next.session.code} Google Meet`}><Video size={15} /> JOIN MEET</a> : null}{nextCourseLink ? <a href={nextCourseLink} target="_blank" rel="noreferrer" aria-label={`Open ${next.session.code} on e-Campus`}><ExternalLink size={15} /> E-CAMPUS</a> : null}</div> : null}</div></section>}
-      <div className="schedule-layout"><section className="timetable-section" aria-labelledby="timetable-title"><div className="section-heading"><div><span className="eyebrow">SEMESTER SEPTEMBER · 2026/2027</span><h2 id="timetable-title">Weekly timetable</h2></div><div className="legend"><span className="lecture-dot">LECTURE</span><span className="tutorial-dot">TUTORIAL</span></div></div>{now ? <Timetable now={now} /> : null}</section>{now ? <Agenda now={now} /> : null}</div>
-      {now ? <BusSchedule now={now} /> : null}
-      <section className="links-section" aria-labelledby="links-title"><div className="section-heading"><div><span className="eyebrow">DIRECTORY / 12 DESTINATIONS</span><h2 id="links-title">Quick access</h2></div><p>Essential campus systems and everyday tools.</p></div><h3>Campus systems</h3><div className="links-grid">{quickLinks.filter((link) => link.category === "campus").map((link) => <QuickLinkCard link={link} key={link.name} />)}</div><h3>Everyday tools</h3><div className="links-grid tools-grid">{quickLinks.filter((link) => link.category === "tools").map((link) => <QuickLinkCard link={link} key={link.name} />)}</div></section>
+      <nav className="dashboard-tools" aria-label="Dashboard tools"><Link href="/calendar"><CalendarDays size={16} /> CALENDAR</Link><Link href="/planner"><ClipboardList size={16} /> PLANNER</Link><Link href="/timetable"><Pencil size={16} /> EDIT TIMETABLE</Link><button onClick={() => void enableNotifications()} className={notificationsEnabled ? "active" : ""}>{notificationsEnabled ? <BellRing size={16} /> : <Bell size={16} />} {notificationsEnabled ? "REMINDERS ON" : "CLASS REMINDERS"}</button>{installPrompt ? <button onClick={() => void installApp()}><Download size={16} /> INSTALL APP</button> : null}<AccountButton /></nav>
+      {configError ? <p className="data-error" role="alert">{configError}</p> : null}
+      {showGoodNight ? <section className="next-class good-night" aria-labelledby="next-title"><div className="night-icon"><MoonStar size={38} /></div><div className="next-main"><h2 id="next-title">晚安，明天見。</h2></div></section> : <section className="next-class" aria-labelledby="next-title"><div className="next-status"><span className="eyebrow"><Clock3 size={14} /> NEXT ON SCHEDULE</span><strong>{now && next ? countdownLabel(now, next.start, next.end) : "CALCULATING"}</strong></div><div className="next-main"><span className="day-number">{next ? next.start.getDate().toString().padStart(2, "0") : "--"}</span><div><h2 id="next-title">{next?.session.code ?? (config ? "No schedule" : "Loading schedule")}</h2><p>{next ? `${next.session.type} · Group ${next.session.group}` : "Semester September · Session 2026/2027"}</p></div></div><div className="next-meta"><span><Clock3 size={15} /> {next ? `${formatHour(next.session.start)}—${formatHour(next.session.end)}` : "--:--"}</span><span><MapPin size={15} /> {next?.session.mode ?? "Checking"}</span>{next && (nextMeetLink || nextCourseLink) ? <div className="next-actions">{nextMeetLink ? <a className="meet-action" href={nextMeetLink} target="_blank" rel="noreferrer" aria-label={`Join ${next.session.code} Google Meet`}><Video size={15} /> JOIN MEET</a> : null}{nextCourseLink ? <a href={nextCourseLink} target="_blank" rel="noreferrer" aria-label={`Open ${next.session.code} on e-Campus`}><ExternalLink size={15} /> E-CAMPUS</a> : null}</div> : null}</div></section>}
+      <div className="schedule-layout"><section className="timetable-section" aria-labelledby="timetable-title"><div className="section-heading"><div><span className="eyebrow">SEMESTER SEPTEMBER · 2026/2027</span><h2 id="timetable-title">Weekly timetable</h2></div><div className="legend"><span className="lecture-dot">LECTURE</span><span className="tutorial-dot">TUTORIAL</span></div></div>{now && config ? <Timetable now={now} config={config} /> : null}</section>{now && config ? <Agenda now={now} config={config} /> : null}</div>
+      {now && config ? <BusSchedule now={now} config={config} /> : null}
+      {config ? <section className="links-section" aria-labelledby="links-title"><div className="section-heading"><div><span className="eyebrow">DIRECTORY / {config.quickLinks.length} DESTINATIONS</span><h2 id="links-title">Quick access</h2></div><p>Essential campus systems and everyday tools.</p></div><h3>Campus systems</h3><div className="links-grid">{config.quickLinks.filter((link) => link.category === "campus").map((link) => <QuickLinkCard link={link} key={link.name} />)}</div><h3>Everyday tools</h3><div className="links-grid tools-grid">{config.quickLinks.filter((link) => link.category === "tools").map((link) => <QuickLinkCard link={link} key={link.name} />)}</div></section> : null}
       <footer><span>UMK PERSONAL DASHBOARD</span><span>SEMESTER 2026/2027</span></footer>
     </main>
   );

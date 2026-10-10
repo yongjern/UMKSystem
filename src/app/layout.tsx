@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { EB_Garamond, IBM_Plex_Mono, Inter, Space_Grotesk } from "next/font/google";
+import { Providers } from "@/app/providers";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -31,7 +32,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="zh-Hant">
       <body className={`${inter.variable} ${spaceGrotesk.variable} ${plexMono.variable} ${garamond.variable}`}>
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
