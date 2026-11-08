@@ -97,7 +97,7 @@ export function TimetableEditor() {
         <form className="timetable-form" onSubmit={(event) => void submit(event)}>
           <div><span className="eyebrow">{draft.id ? "EDIT CLASS" : "NEW CLASS"}</span><h2>{draft.id ? "Update this session" : "Add to your week"}</h2></div>
           <label><span>DAY</span><select value={draft.day} onChange={(event) => setDraft({ ...draft, day: Number(event.target.value) as ClassSession["day"] })}>{dayNames.map((day, index) => <option value={index} key={day}>{day}</option>)}</select></label>
-          <label><span>SUBJECT</span><select value={draft.code} onChange={(event) => setDraft({ ...draft, code: event.target.value })}>{subjects.map((subject) => <option value={subject.code} key={subject.code}>{subject.code} · {subject.name}</option>)}</select></label>
+          <label><span>SUBJECT</span><select value={draft.code} onChange={(event) => setDraft({ ...draft, code: event.target.value })}>{subjects.slice(0, 10).map((subject) => <option value={subject.code} key={subject.code}>{subject.code} · {subject.name}</option>)}</select></label>
           <label><span>START HOUR</span><input type="time" step="1800" value={formatHour(draft.start)} onChange={(event) => setDraft({ ...draft, start: parseHour(event.target.value) })} required /></label>
           <label><span>END HOUR</span><input type="time" step="1800" value={formatHour(draft.end)} onChange={(event) => setDraft({ ...draft, end: parseHour(event.target.value) })} required /></label>
           <label><span>TYPE</span><select value={draft.type} onChange={(event) => setDraft({ ...draft, type: event.target.value as SessionType })}><option>Lecture</option><option>Tutorial</option></select></label>

@@ -8,8 +8,8 @@ export function SubjectCatalog() {
   const [query, setQuery] = useState("");
   const filteredSubjects = useMemo(() => {
     const term = query.trim().toLocaleLowerCase();
-    if (!term) return subjects;
-    return subjects.filter((subject) => `${subject.code} ${subject.name}`.toLocaleLowerCase().includes(term));
+    const matches = term ? subjects.filter((subject) => `${subject.code} ${subject.name}`.toLocaleLowerCase().includes(term)) : subjects;
+    return matches.slice(0, 10);
   }, [query]);
 
   return (
@@ -18,7 +18,7 @@ export function SubjectCatalog() {
         <Search size={18} />
         <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by subject code or name" aria-label="Search subjects" />
       </label>
-      <p className="subject-count">SHOWING {filteredSubjects.length} OF {subjects.length} SUBJECTS</p>
+      <p className="subject-count">SHOWING UP TO 10 SUBJECTS · {subjects.length} AVAILABLE</p>
       <section className="subject-grid" aria-live="polite">
         {filteredSubjects.map((subject) => <article key={subject.code}><strong>{subject.code}</strong><span>{subject.name}</span></article>)}
       </section>
