@@ -123,17 +123,17 @@ function busCountdown(now: Date, departure: Date) {
 async function showNotificationTest() {
   if (typeof Notification === "undefined" || Notification.permission !== "granted") return false;
   const options: NotificationOptions = {
-    body: "歡迎使用 Yong's MYUMK 系統。MYUMK系統版本為 : v.1.06 BETA 穩定版本",
+    body: "This is a test notification from MyUMK. You can disable notifications in your browser settings.\nVersion 1.06.5",
     icon: "/logo.svg",
     tag: `umk-load-test-${Date.now()}`,
   };
   if ("serviceWorker" in navigator) {
     await navigator.serviceWorker.register("/sw.js");
     const registration = await navigator.serviceWorker.ready;
-    await registration.showNotification("My UMK 通知測試", options);
+    await registration.showNotification("Welcome Use MyUMK!", options);
     return true;
   }
-  new Notification("Yong's MY UMK 消息系統", options);
+  new Notification("Welcome Use MyUMK!", options);
   return true;
 }
 
@@ -211,7 +211,7 @@ function BusSchedule({ now, config }: { now: Date; config: DashboardConfig }) {
   return (
     <section className="bus-section" aria-labelledby="bus-title">
       <div className="section-heading bus-heading">
-        <div><span className="eyebrow">FROM KEMUMIN TO UMK KAMPUS KOTA</span><h2 id="bus-title">Kampus Kota bus</h2></div>
+        <div><span className="eyebrow">KEMUMIN ⬅➡ KAMPUS KOTA</span><h2 id="bus-title">Kampus Kota bus</h2></div>
       </div>
       <div className="bus-board">
         <div className="bus-directions">
