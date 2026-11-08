@@ -1,0 +1,842 @@
+[
+    {
+        "code":  "AAT10103",
+        "name":  "PERAKAUANAN DAN PERNIAGAAN"
+    },
+    {
+        "code":  "AAT10203",
+        "name":  "PERAKAUNAN KEWANGAN"
+    },
+    {
+        "code":  "ABS10103",
+        "name":  "USUL FIQH"
+    },
+    {
+        "code":  "ABS10203",
+        "name":  "TEOLOGI ISLAM"
+    },
+    {
+        "code":  "ABS10303",
+        "name":  "PRINSIP EKONOMI ISLAM"
+    },
+    {
+        "code":  "ACM10103",
+        "name":  "PENGENALAN KEPADA PERDAGANGAN"
+    },
+    {
+        "code":  "ACM10203",
+        "name":  "LOGISTIK DAN PENGEDARAN DALAM PERDAGANGAN"
+    },
+    {
+        "code":  "ACM10303",
+        "name":  "PERDAGANGAN PERUNCITAN DAN FRANCAIS"
+    },
+    {
+        "code":  "AFT1033",
+        "name":  "PRINSIP EKONOMI"
+    },
+    {
+        "code":  "AFT1053",
+        "name":  "PRINSIP PEMASARAN"
+    },
+    {
+        "code":  "AFT1083",
+        "name":  "MIKROEKONOMI"
+    },
+    {
+        "code":  "ALM10103",
+        "name":  "ASAS LOGISTIK DAN RANTAIAN BEKALAN"
+    },
+    {
+        "code":  "ALM10203",
+        "name":  "AUTOMASI LOGISTIK \u0026 IOT"
+    },
+    {
+        "code":  "ALM10303",
+        "name":  "PERDAGANGAN ANTARABANGSA \u0026 PERKHIDMATAN"
+    },
+    {
+        "code":  "ALS2013",
+        "name":  "ASAS LOGISTIK DAN PERNIAGAAN PENGEDARAN"
+    },
+    {
+        "code":  "ALS2143",
+        "name":  "EKONOMI PENGANGKUTAN"
+    },
+    {
+        "code":  "APT2013",
+        "name":  "GELAGAT USAHAWAN"
+    },
+    {
+        "code":  "APT3083",
+        "name":  "KEUSAHAWANAN STRATEGIK"
+    },
+    {
+        "code":  "ARM10103",
+        "name":  "PENGENALAN KEPADA INDUSTRI PERUNCITAN"
+    },
+    {
+        "code":  "ARM10203",
+        "name":  "GELAGAT PENGGUNA PERUNCITAN"
+    },
+    {
+        "code":  "ARM10303",
+        "name":  "PENGURUSAN BARANG NIAGA PERUNCITAN"
+    },
+    {
+        "code":  "ATF10103",
+        "name":  "ASAS PENGURUSAN"
+    },
+    {
+        "code":  "ATF10203",
+        "name":  "ASAS KEUSAHAWANAN"
+    },
+    {
+        "code":  "ATF10303",
+        "name":  "GELAGAT USAHAWAN"
+    },
+    {
+        "code":  "ATF10403",
+        "name":  "PRINSIP PEMASARAN"
+    },
+    {
+        "code":  "ATF20603",
+        "name":  "PERAKAUNAN PERNIAGAAN"
+    },
+    {
+        "code":  "CFT1013",
+        "name":  "LUKISAN"
+    },
+    {
+        "code":  "CFT1022",
+        "name":  "KEBUDAYAAN DAN TAMADUN MELAYU"
+    },
+    {
+        "code":  "CFT1043",
+        "name":  "PENGANTAR ANTROPOLOGI DAN SOSIOLOGI"
+    },
+    {
+        "code":  "CFT1063",
+        "name":  "ASAS MULTIMEDIA DAN TEKNOLOGI WEB"
+    },
+    {
+        "code":  "DVT10102",
+        "name":  "PENGANTAR PERUBATAN VETERINAR"
+    },
+    {
+        "code":  "DVT10203",
+        "name":  "ANATOMI VETERINAR I"
+    },
+    {
+        "code":  "DVT10303",
+        "name":  "FISIOLOGI VETERINAR I"
+    },
+    {
+        "code":  "DVT10403",
+        "name":  "BIOKIMIA VETERINAR"
+    },
+    {
+        "code":  "DVT10502",
+        "name":  "HISTOLOGI VETERINAR"
+    },
+    {
+        "code":  "DVT10602",
+        "name":  "EMBRIOLOGI VETERINAR"
+    },
+    {
+        "code":  "EFT10203",
+        "name":  "KIMIA ORGANIK"
+    },
+    {
+        "code":  "EFT1263",
+        "name":  "KIMIA DALAM SAINS GUNAAN"
+    },
+    {
+        "code":  "EFT13103",
+        "name":  "FIZIK GUNAAN"
+    },
+    {
+        "code":  "EFT13203",
+        "name":  "KEM BUMI"
+    },
+    {
+        "code":  "EGT10103",
+        "name":  "PENGENALAN DAN AMALAN PROFESSIONAL DALAM GEOSAINS"
+    },
+    {
+        "code":  "EKT12403",
+        "name":  "BIOLOGI ALAM SEKITAR"
+    },
+    {
+        "code":  "EKT12503",
+        "name":  "PENGENALAN KEPADA KELESTARIAN ALAM SEKITAR"
+    },
+    {
+        "code":  "ENT1233",
+        "name":  "KEPELBAGAIAN BIOLOGI"
+    },
+    {
+        "code":  "ENT1243",
+        "name":  "MIKROBIOLOGI DAN BIOKIMIA DALAM SAINS GUNAAN"
+    },
+    {
+        "code":  "EVT10103",
+        "name":  "FIZIK ASAS UNTUK ALAM SEKITAR"
+    },
+    {
+        "code":  "FFT10103",
+        "name":  "MIKROBIOLOGI"
+    },
+    {
+        "code":  "FFT10203",
+        "name":  "KIMIA ORGANIK"
+    },
+    {
+        "code":  "FFT10302",
+        "name":  "PENGENALAN KEPADA INDUSTRI ASAS TANI"
+    },
+    {
+        "code":  "FFT2073",
+        "name":  "STATISTIK ASAS"
+    },
+    {
+        "code":  "FPT10102",
+        "name":  "KEMAHIRAN PENULISAN SAINTIFIK"
+    },
+    {
+        "code":  "FST20503",
+        "name":  "JAMINAN MAKANAN"
+    },
+    {
+        "code":  "HFT10103",
+        "name":  "ASAS PENGURUSAN"
+    },
+    {
+        "code":  "HFT10203",
+        "name":  "ASAS PERAKAUNAN"
+    },
+    {
+        "code":  "HFT10403",
+        "name":  "PRINSIP EKONOMI"
+    },
+    {
+        "code":  "HFT10503",
+        "name":  "PRINSIP PEMASARAN"
+    },
+    {
+        "code":  "HHP10103",
+        "name":  "PENGENALAN KEPADA INDUSTRI KEUSAHAWANAN HOSPITALITI"
+    },
+    {
+        "code":  "HTP10103",
+        "name":  "PENGENALAN KEPADA INDUSTRI KEUSAHAWANAN PELANCONGAN"
+    },
+    {
+        "code":  "HTS10203",
+        "name":  "GEOGRAFI PELANCONGAN"
+    },
+    {
+        "code":  "HWP10103",
+        "name":  "PENGENALAN KEPADA INDUSTRI KEUSAHAWANAN KESEJAHTERAAN"
+    },
+    {
+        "code":  "HWT10203",
+        "name":  "PENGENALAN KEPADA ANATOMI DAN FISIOLOGI MANUSIA"
+    },
+    {
+        "code":  "JBT10903",
+        "name":  "KIMIA ORGANIK DAN ANALISIS"
+    },
+    {
+        "code":  "JFT10403",
+        "name":  "MATEMATIK UNTUK TEKNOLOGIS"
+    },
+    {
+        "code":  "JFT10503",
+        "name":  "ASAS TEKNOLOGI"
+    },
+    {
+        "code":  "JHT10902",
+        "name":  "PENGENALAN KEPADA SUMBER HUTAN"
+    },
+    {
+        "code":  "JLT10903",
+        "name":  "PENGENALAN KEPADA SUMBER MINERAL"
+    },
+    {
+        "code":  "JMT10903",
+        "name":  "SAINS BAHAN UNTUK TEKNOLOGI"
+    },
+    {
+        "code":  "JTT10903",
+        "name":  "PENGENALAN KEPADA TENAGA"
+    },
+    {
+        "code":  "JTT11003",
+        "name":  "APLIKASI KOMPUTER DALAM REKABENTUK"
+    },
+    {
+        "code":  "LAT10103",
+        "name":  "KOMPETENSI BAHASA ARAB I"
+    },
+    {
+        "code":  "LAT10203",
+        "name":  "SISTEM BAHASA ARAB I"
+    },
+    {
+        "code":  "LAT20303",
+        "name":  "BAHASA ARAB UNTUK TUJUAN KHAS I"
+    },
+    {
+        "code":  "LBF10103",
+        "name":  "PROFESSIONAL WORKPLACE COMMUNICATION"
+    },
+    {
+        "code":  "LBT10103",
+        "name":  "SPEAK UP"
+    },
+    {
+        "code":  "LCT10103",
+        "name":  "PENGANTAR PEMBANGUNAN KOMUNITI"
+    },
+    {
+        "code":  "LCT10203",
+        "name":  "TEORI PERUBAHAN DAN INOVASI SOSIAL"
+    },
+    {
+        "code":  "LDT10103",
+        "name":  "PENGANTAR PSIKOLOGI"
+    },
+    {
+        "code":  "LFT10202",
+        "name":  "PENGANTAR PENGAJIAN SAINS SAINS SOSIAL DAN KEMANUSIAAN"
+    },
+    {
+        "code":  "NFT10103",
+        "name":  "INTERAKSI KOMPUTER-MANUSIA"
+    },
+    {
+        "code":  "NFT10203",
+        "name":  "ASAS PENGATURCARAAN"
+    },
+    {
+        "code":  "NFT10303",
+        "name":  "KOMPUTERAN MATEMATIK"
+    },
+    {
+        "code":  "SGA1316",
+        "name":  "STUDIO REKABENTUK SENIBINA I"
+    },
+    {
+        "code":  "SGA1333",
+        "name":  "SEJARAH DAN TEORI SENIBINA I"
+    },
+    {
+        "code":  "SGA1363",
+        "name":  "KOMUNIKASI KESENIBINAAN"
+    },
+    {
+        "code":  "SGD1314",
+        "name":  "STUDIO REKABENTUK SENIBINA DALAMAN I"
+    },
+    {
+        "code":  "SGD1323",
+        "name":  "SEJARAH DAN SENIBINA I"
+    },
+    {
+        "code":  "SGD1333",
+        "name":  "KOMUNIKASI SENIREKA I (DRAFTING)"
+    },
+    {
+        "code":  "SGL1314",
+        "name":  "STUDIO ASAS SENIBINA LANDSKAP"
+    },
+    {
+        "code":  "SGL1322",
+        "name":  "PENGENALAN KEPADA SENIBINA LANDSKAP"
+    },
+    {
+        "code":  "SGL1332",
+        "name":  "BAHAN TANAMAN LANDSKAP"
+    },
+    {
+        "code":  "UBA20303",
+        "name":  "BAHASA ARAB III"
+    },
+    {
+        "code":  "UBE10103",
+        "name":  "PROFESSIONAL WORKPLACE COMMUNICATION"
+    },
+    {
+        "code":  "UBE10203",
+        "name":  "LANGUAGE, STAGE, AND DRAMATISATION"
+    },
+    {
+        "code":  "UBG20303",
+        "name":  "BAHASA GERMAN III"
+    },
+    {
+        "code":  "UBI1012",
+        "name":  "ENGLISH I"
+    },
+    {
+        "code":  "UBI10402",
+        "name":  "INTENSIVE COMMUNICATION SKILLS"
+    },
+    {
+        "code":  "UBI2012",
+        "name":  "ENGLISH III â€“ ENGLISH FOR SCIENCES"
+    },
+    {
+        "code":  "UBI2022",
+        "name":  "ENGLISH III â€“ ENGLISH FOR BUSINESS COMMUNICATION"
+    },
+    {
+        "code":  "UBI20302",
+        "name":  "INTEGRATED READING AND WRITING"
+    },
+    {
+        "code":  "UBI2032",
+        "name":  "ENGLISH III â€“ ENGLISH FOR THE ARTS"
+    },
+    {
+        "code":  "UBI20402",
+        "name":  "ACADEMIC READING AND WRITING"
+    },
+    {
+        "code":  "UBJ20303",
+        "name":  "BAHASA JEPUN III"
+    },
+    {
+        "code":  "UBM20303",
+        "name":  "BAHASA MANDARIN III"
+    },
+    {
+        "code":  "UBP20303",
+        "name":  "BAHASA PERANCIS III"
+    },
+    {
+        "code":  "UBT20303",
+        "name":  "BAHASA THAI III"
+    },
+    {
+        "code":  "UB_2_12",
+        "name":  "BAHASA ASING I"
+    },
+    {
+        "code":  "UIE20103",
+        "name":  "MANDALA WAHYU"
+    },
+    {
+        "code":  "UIE20203",
+        "name":  "INSTITUSI SOSIAL DALAM PEMBANGUNAN INSAN"
+    },
+    {
+        "code":  "UIE20303",
+        "name":  "FIQH MUAMALAT TRANSAKSI HARIAN"
+    },
+    {
+        "code":  "UIE20403",
+        "name":  "PENGENALAN ILMU LOJIK"
+    },
+    {
+        "code":  "UIE20503",
+        "name":  "NEW MEDIA AND SOCIETY"
+    },
+    {
+        "code":  "UIE20603",
+        "name":  "PERSUASIVE ENTERTAINMENT COMMUNICATION"
+    },
+    {
+        "code":  "UIE30102",
+        "name":  "INTEGRITI DAN ANTI RASUAH"
+    },
+    {
+        "code":  "UKI10101",
+        "name":  "REKABENTUK WEBLOG"
+    },
+    {
+        "code":  "UKI10201",
+        "name":  "FOTOGRAFI"
+    },
+    {
+        "code":  "UKI1021",
+        "name":  "FOTOGRAFI"
+    },
+    {
+        "code":  "UKI10301",
+        "name":  "PENERBITAN VIDEO"
+    },
+    {
+        "code":  "UKI10401",
+        "name":  "PENYUNTINGAN GRAFIK DAN VISUAL"
+    },
+    {
+        "code":  "UKI10501",
+        "name":  "TEKNOLOGI MUDAH ALIH"
+    },
+    {
+        "code":  "UKK10101",
+        "name":  "AKSI INOVASI DALAM KEUSAHAWANAN 1"
+    },
+    {
+        "code":  "UKK20101",
+        "name":  "AKSI INOVASI DALAM KEUSAHAWANAN 2 (INACT2)"
+    },
+    {
+        "code":  "UKP10101",
+        "name":  "GAMELAN"
+    },
+    {
+        "code":  "UKP10201",
+        "name":  "KOIR"
+    },
+    {
+        "code":  "UKP10301",
+        "name":  "TARIAN TRADISIONAL"
+    },
+    {
+        "code":  "UKP10401",
+        "name":  "TEATER"
+    },
+    {
+        "code":  "UKP10501",
+        "name":  "DIKIR BARAT"
+    },
+    {
+        "code":  "UKP10601",
+        "name":  "MAK YONG"
+    },
+    {
+        "code":  "UKP10701",
+        "name":  "REBANA KERCING"
+    },
+    {
+        "code":  "UKP10801",
+        "name":  "PANCARAGAM"
+    },
+    {
+        "code":  "UKP10901",
+        "name":  "WAYANG KULIT KELANTAN"
+    },
+    {
+        "code":  "UKS10101",
+        "name":  "BOLA JARING"
+    },
+    {
+        "code":  "UKS10201",
+        "name":  "BOLA SEPAK"
+    },
+    {
+        "code":  "UKS10301",
+        "name":  "BOLA TAMPAR"
+    },
+    {
+        "code":  "UKS10401",
+        "name":  "BADMINTON"
+    },
+    {
+        "code":  "UKS10501",
+        "name":  "BOLA BALING"
+    },
+    {
+        "code":  "UKS10601",
+        "name":  "TENIS"
+    },
+    {
+        "code":  "UKS10701",
+        "name":  "GOLF"
+    },
+    {
+        "code":  "UKS10901",
+        "name":  "PETANQUE"
+    },
+    {
+        "code":  "UKS11001",
+        "name":  "FUTSAL"
+    },
+    {
+        "code":  "UKS11101",
+        "name":  "PING PONG"
+    },
+    {
+        "code":  "UKS11201",
+        "name":  "MEMANAH"
+    },
+    {
+        "code":  "UKS11301",
+        "name":  "TAEKWANDO"
+    },
+    {
+        "code":  "UKS11401",
+        "name":  "EKUESTRIAN"
+    },
+    {
+        "code":  "UKS11501",
+        "name":  "GIMNASIUM"
+    },
+    {
+        "code":  "UKS11601",
+        "name":  "SKUASY"
+    },
+    {
+        "code":  "UKS11701",
+        "name":  "BOLING PADANG"
+    },
+    {
+        "code":  "UKU10101",
+        "name":  "PENGURUSAN ORGANISASI"
+    },
+    {
+        "code":  "UKU1011",
+        "name":  "BULAN SABIT MERAH"
+    },
+    {
+        "code":  "UKU10201",
+        "name":  "PENGUCAPAN AWAM"
+    },
+    {
+        "code":  "UKU1021",
+        "name":  "PENGAKAP"
+    },
+    {
+        "code":  "UKU10301",
+        "name":  "KEPIMPINAN DAN MOTIVASI"
+    },
+    {
+        "code":  "UKU1031",
+        "name":  "PERTAHANAN AWAM"
+    },
+    {
+        "code":  "UKU10602",
+        "name":  "WATANIAH"
+    },
+    {
+        "code":  "UKU10802",
+        "name":  "BRIGED RELA SISWA SISWI (RELASIS)"
+    },
+    {
+        "code":  "UKU11002",
+        "name":  "KUMPULAN LATIHAN KELANASISWA MALAYSIA"
+    },
+    {
+        "code":  "UKV10101",
+        "name":  "KOR SUKARELAWAN POLIS SISWA/SISWI (KOR SUKSIS) 1"
+    },
+    {
+        "code":  "UKV10201",
+        "name":  "KOR SUKARELAWAN POLIS SISWA/SISWI (KOR SUKSIS) 2"
+    },
+    {
+        "code":  "UKV10502",
+        "name":  "BRIGED BOMBA \u0026 PENYELAMAT 1"
+    },
+    {
+        "code":  "UKV10701",
+        "name":  "KOR SISPA 1"
+    },
+    {
+        "code":  "UKV10801",
+        "name":  "KOR SISPA 2"
+    },
+    {
+        "code":  "UKV11101",
+        "name":  "BULAN SABIT MERAH (BSMM)1"
+    },
+    {
+        "code":  "UKV11201",
+        "name":  "BULAN SABIT MERAH (BSMM) 2"
+    },
+    {
+        "code":  "UKV11301",
+        "name":  "KELANASISWA MALAYSIA (UDARA) 1"
+    },
+    {
+        "code":  "UKV11401",
+        "name":  "KELANASISWA MALAYSIA (UDARA) 2"
+    },
+    {
+        "code":  "UKV11501",
+        "name":  "PASUKAN LATIHAN PEGAWAI SIMPANAN (PALAPES) TENTERA LAUT 1"
+    },
+    {
+        "code":  "UKV11601",
+        "name":  "PASUKAN LATIHAN PEGAWAI SIMPANAN (PALAPES) TENTERA LAUT 2"
+    },
+    {
+        "code":  "UKV12101",
+        "name":  "BRIGED GAYONG MALAYSIA (BGM) 1"
+    },
+    {
+        "code":  "UKV12201",
+        "name":  "BRIGED GAYONG MALAYSIA (BGM) 2"
+    },
+    {
+        "code":  "UKV12501",
+        "name":  "SISWA/SISWI KOREKSIONAL (SISKOR) 1"
+    },
+    {
+        "code":  "UKV12601",
+        "name":  "SISWA/SISWI KOREKSIONAL (SISKOR) 2"
+    },
+    {
+        "code":  "UKV12901",
+        "name":  "PASUKAN LATIHAN PEGAWAI SIMPANAN (PALAPES) TENTERA DARAT 1"
+    },
+    {
+        "code":  "UKV13001",
+        "name":  "PASUKAN LATIHAN PEGAWAI SIMPANAN (PALAPES) TENTERA DARAT 2"
+    },
+    {
+        "code":  "UKV13501",
+        "name":  "PANDU PUTERI KLOVER (KLOVER) 1"
+    },
+    {
+        "code":  "UKV13601",
+        "name":  "PANDU PUTERI KLOVER (KLOVER) 2"
+    },
+    {
+        "code":  "UKV13701",
+        "name":  "KOR SUKARELAWAN ANTI RASUAH SPRM (SUAR) 1"
+    },
+    {
+        "code":  "UKV13801",
+        "name":  "KOR SUKARELAWAN ANTI RASUAH SPRM (SUAR) 2"
+    },
+    {
+        "code":  "UKV20102",
+        "name":  "SUKSIS 2"
+    },
+    {
+        "code":  "UKV20202",
+        "name":  "KOR SISPA 2"
+    },
+    {
+        "code":  "UKV2022",
+        "name":  "PALAPES TENTERA LAUT PERINGKAT PERTENGAHAN I \u0026 II"
+    },
+    {
+        "code":  "UKV20301",
+        "name":  "KOR SUKARELAWAN POLIS SISWA/SISWI (KOR SUKSIS) 3"
+    },
+    {
+        "code":  "UKV20302",
+        "name":  "SISKOR 2"
+    },
+    {
+        "code":  "UKV20401",
+        "name":  "KOR SUKARELAWAN POLIS SISWA/SISWI (KOR SUKSIS) 4"
+    },
+    {
+        "code":  "UKV20402",
+        "name":  "PALAPES DARAT 2"
+    },
+    {
+        "code":  "UKV20501",
+        "name":  "BRIGED BOMBA \u0026 PENYELAMAT 2"
+    },
+    {
+        "code":  "UKV20901",
+        "name":  "KOR SISPA 3"
+    },
+    {
+        "code":  "UKV21001",
+        "name":  "KOR SISPA 4"
+    },
+    {
+        "code":  "UKV21701",
+        "name":  "PASUKAN LATIHAN PEGAWAI SIMPANAN (PALAPES) TENTERA LAUT 3"
+    },
+    {
+        "code":  "UKV21801",
+        "name":  "PASUKAN LATIHAN PEGAWAI SIMPANAN (PALAPES) TENTERA LAUT 4"
+    },
+    {
+        "code":  "UKV22301",
+        "name":  "BRIGED GAYONG MALAYSIA (BGM) 3"
+    },
+    {
+        "code":  "UKV22401",
+        "name":  "BRIGED GAYONG MALAYSIA (BGM) 4"
+    },
+    {
+        "code":  "UKV22701",
+        "name":  "SISWA/SISWI KOREKSIONAL (SISKOR) 3"
+    },
+    {
+        "code":  "UKV22801",
+        "name":  "SISWA/SISWI KOREKSIONAL (SISKOR) 4"
+    },
+    {
+        "code":  "UKV23101",
+        "name":  "PASUKAN LATIHAN PEGAWAI SIMPANAN (PALAPES) TENTERA DARAT 3"
+    },
+    {
+        "code":  "UKV23201",
+        "name":  "PASUKAN LATIHAN PEGAWAI SIMPANAN (PALAPES) TENTERA DARAT 4"
+    },
+    {
+        "code":  "UKV23901",
+        "name":  "KOR SUKARELAWAN ANTI RASUAH SPRM (SUAR) 3"
+    },
+    {
+        "code":  "UKV24001",
+        "name":  "KOR SUKARELAWAN ANTI RASUAH SPRM (SUAR) 4"
+    },
+    {
+        "code":  "UKV30102",
+        "name":  "SUKSIS 3"
+    },
+    {
+        "code":  "UKV30201",
+        "name":  "KOR SISPA 3"
+    },
+    {
+        "code":  "UKV3022",
+        "name":  "PALAPES TENTERA LAUT PERINGKAT TINGGI I \u0026 II"
+    },
+    {
+        "code":  "UKV30402",
+        "name":  "PALAPES DARAT 3"
+    },
+    {
+        "code":  "UKV30501",
+        "name":  "KOR SUKARELAWAN POLIS SISWA/SISWI (KOR SUKSIS) 5"
+    },
+    {
+        "code":  "UKV30601",
+        "name":  "KOR SUKARELAWAN POLIS SISWA/SISWI (KOR SUKSIS) 6"
+    },
+    {
+        "code":  "UKV31901",
+        "name":  "PASUKAN LATIHAN PEGAWAI SIMPANAN (PALAPES) TENTERA LAUT 5"
+    },
+    {
+        "code":  "UKV32001",
+        "name":  "PASUKAN LATIHAN PEGAWAI SIMPANAN (PALAPES) TENTERA LAUT 6"
+    },
+    {
+        "code":  "UKV33301",
+        "name":  "PASUKAN LATIHAN PEGAWAI SIMPANAN (PALAPES) TENTERA DARAT 5"
+    },
+    {
+        "code":  "UKV33401",
+        "name":  "PASUKAN LATIHAN PEGAWAI SIMPANAN (PALAPES) TENTERA DARAT 6"
+    },
+    {
+        "code":  "USK10302",
+        "name":  "FALSAFAH DAN CABARAN SEMASA"
+    },
+    {
+        "code":  "USK10402",
+        "name":  "ASPIRASI NEGARA BANGSA"
+    },
+    {
+        "code":  "USK20803",
+        "name":  "AL-QURAN DAN SAINS"
+    },
+    {
+        "code":  "USK20903",
+        "name":  "PENDIDIKAN KEKELUARGAAN"
+    }
+]
