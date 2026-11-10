@@ -1,12 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { EB_Garamond, IBM_Plex_Mono, Inter, Space_Grotesk } from "next/font/google";
+import { Archivo, IBM_Plex_Mono, Newsreader } from "next/font/google";
 import { Providers } from "@/app/providers";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-display" });
+const archivo = Archivo({ subsets: ["latin"], variable: "--font-inter" });
+const display = Archivo({ subsets: ["latin"], variable: "--font-display" });
 const plexMono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-mono" });
-const garamond = EB_Garamond({ subsets: ["latin"], style: ["italic"], variable: "--font-serif" });
+const newsreader = Newsreader({ subsets: ["latin"], style: ["italic"], variable: "--font-serif" });
 
 export const metadata: Metadata = {
   title: "Yong's UMK Personal Dashboard",
@@ -31,7 +31,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="zh-Hant">
-      <body className={`${inter.variable} ${spaceGrotesk.variable} ${plexMono.variable} ${garamond.variable}`}>
+      <body className={`${archivo.variable} ${display.variable} ${plexMono.variable} ${newsreader.variable}`}>
         <Providers>{children}</Providers>
       </body>
     </html>
