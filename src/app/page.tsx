@@ -52,8 +52,8 @@ export default function MaintenancePage() {
             </div>
           </dl>
 
-          <a className="contact-link" href={`mailto:${maintenance.contactEmail}`}>
-            {maintenance.contactLabel}
+          <a className="contact-link" href={maintenance.link}>
+            {maintenance.linkLabel}
             <span aria-hidden="true">↗</span>
           </a>
         </div>

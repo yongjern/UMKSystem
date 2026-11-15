@@ -4,12 +4,12 @@
   "title": 
     "Preparing for a URL Fowarding",
   "message": 
-    "Dear Users:\n As we annoucement earlier, we are currently performing a maintenance to prepare for a URL forwarding. This is to ensure that our users can access the new domain seamlessly. We apologize for any inconvenience caused and appreciate your patience during this time.\n\nUser are suggested to use my.umk4u.tech for futher experience.",
+    "Dear Users:\n\n As we annoucement earlier, we are currently performing a maintenance to prepare for a URL forwarding. This is to ensure that our users can access the new domain seamlessly. We apologize for any inconvenience caused and appreciate your patience during this time.\n\nUser are suggested to use my.umk4u.tech for futher experience.",
   "startedAt": "16 November 2026, 12:00 AM MYT",
   "estimatedReturn": "1 December 2026, 1:00 AM MYT",
   "progress": 0,
   "progressLabel": "Please use my.umk4u.tech for further experience.",
-  "contactLabel": "Email support",
-  "contactEmail": "jieernyong1207@gmail.com",
+  "linkLabel": "Open MyUMK",
+  "link": "https://my.umk4u.tech",
   "reference": "Annoucement will be released soon."
 }
