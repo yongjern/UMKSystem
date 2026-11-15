@@ -1,5 +1,5 @@
 // Change here for maintenance page content
-import maintenance from "@/app/maintenance_update.json";
+import maintenance from "@/app/maintainence_update.json";
 
 export default function MaintenancePage() {
   const progress = Math.min(100, Math.max(0, maintenance.progress));

@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { EB_Garamond, IBM_Plex_Mono, Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 
-import maintenance from "@/app/maintenance_update.json";
+import maintenance from "@/app/maintainence_update.json";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-body" });
 const display = Space_Grotesk({ subsets: ["latin"], variable: "--font-display" });
