@@ -1,39 +1,40 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo, IBM_Plex_Mono, Newsreader } from "next/font/google";
-import { Providers } from "@/app/providers";
+import { Archivo, IBM_Plex_Mono } from "next/font/google";
+import maintenance from "@/app/maintenance.json";
 import "./globals.css";
 
-const archivo = Archivo({ subsets: ["latin"], variable: "--font-inter" });
-const display = Archivo({ subsets: ["latin"], variable: "--font-display" });
-const plexMono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-mono" });
-const newsreader = Newsreader({ subsets: ["latin"], style: ["italic"], variable: "--font-serif" });
+const archivo = Archivo({ subsets: ["latin"], variable: "--font-sans" });
+const plexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-mono",
+});
 
 export const metadata: Metadata = {
-  title: "𝐌𝐲𝐔𝐌𝐊 ♦︎ Your Academic Dashboard",
-  description: "Your Academic Dashboard. Made by ♥ by Yongg.",
+  title: `𝐌𝐲𝐔𝐌𝐊 ♦︎ ${maintenance.statusLabel}`,
+  description: maintenance.message,
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [{ url: "/logo.svg", type: "image/svg+xml" }],
     shortcut: "/logo.svg",
     apple: "/logo.svg",
   },
+  robots: { index: false, follow: false },
   openGraph: {
-    title: "𝐌𝐲𝐔𝐌𝐊 ♦︎ Your Academic Dashboard",
-    description: "Your Academic Dashboard. Made by ♥ by Yongg.",
+    title: `𝐌𝐲𝐔𝐌𝐊 ♦︎ ${maintenance.statusLabel}`,
+    description: maintenance.message,
     type: "website",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#ff3b57",
+  themeColor: "#f2f0e9",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="zh-Hant">
-      <body className={`${archivo.variable} ${display.variable} ${plexMono.variable} ${newsreader.variable}`}>
-        <Providers>{children}</Providers>
-      </body>
+    <html lang="en" data-type="software" data-radius="sharp" data-buttons="arrow" data-motion="on">
+      <body className={`${archivo.variable} ${plexMono.variable}`}>{children}</body>
     </html>
   );
 }

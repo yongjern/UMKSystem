@@ -1,0 +1,13 @@
+{
+  "brand": "MyUMK",
+  "statusLabel": "Planned maintenance",
+  "title": "Academic dashboard maintenance",
+  "message": "MyUMK is offline while the dashboard receives a scheduled service update. Classes, deadlines, and campus tools will return when the work is complete.",
+  "startedAt": "15 November 2026, 10:30 PM MYT",
+  "estimatedReturn": "16 November 2026, 1:00 AM MYT",
+  "progress": 42,
+  "progressLabel": "Service update in progress",
+  "contactLabel": "Email support",
+  "contactEmail": "support@myumk.example",
+  "reference": "MX-1115"
+}

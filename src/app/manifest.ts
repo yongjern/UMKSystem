@@ -2,13 +2,13 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "𝐌𝐲𝐔𝐌𝐊 ♦︎ Your Academic Helper",
-    short_name: "𝐌𝐲𝐔𝐌𝐊 ♦︎ Your Academic Helper",
-    description: "UMK classes, deadlines, buses, and campus tools in one place.",
+    name: "MyUMK Maintenance",
+    short_name: "MyUMK",
+    description: "Current MyUMK maintenance status.",
     start_url: "/",
     display: "standalone",
-    background_color: "#000000",
-    theme_color: "#ff3b57",
+    background_color: "#f2f0e9",
+    theme_color: "#f2f0e9",
     icons: [
       {
         src: "/logo.svg",
