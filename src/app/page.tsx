@@ -1,4 +1,5 @@
-import maintenance from "@/app/maintenance.json";
+// Change here for maintenance page content
+import maintenance from "@/app/maintenance_update.json";
 
 export default function MaintenancePage() {
   const progress = Math.min(100, Math.max(0, maintenance.progress));
@@ -10,10 +11,10 @@ export default function MaintenancePage() {
           Skip to maintenance status
         </a>
         <a className="brand" href="#main-content" aria-label={`${maintenance.brand} maintenance home`}>
-          <span className="brand-mark" aria-hidden="true">M</span>
+          <span className="brand-mark" aria-hidden="true">𝐌𝐲𝐔𝐌𝐊</span>
           <span className="brand-copy">
-            <small>Academic operations</small>
-            <strong>{maintenance.brand}</strong>
+            <small>Annoucement from Creator 🔈</small>
+            <strong>{maintenance.brand} (my.umk4u.tech)</strong>
           </span>
         </a>
         <div className="header-status">
