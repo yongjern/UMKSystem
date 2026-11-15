@@ -9,8 +9,8 @@ const plexMono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500", "600
 const newsreader = Newsreader({ subsets: ["latin"], style: ["italic"], variable: "--font-serif" });
 
 export const metadata: Metadata = {
-  title: "Yong's UMK Personal Dashboard",
-  description: "UMK systems, tools, and weekly timetable in one place.",
+  title: "𝐌𝐲𝐔𝐌𝐊 ♦︎ Your Academic Dashboard",
+  description: "Your Academic Dashboard. Made by ♥ by Yongg.",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [{ url: "/logo.svg", type: "image/svg+xml" }],
@@ -18,8 +18,8 @@ export const metadata: Metadata = {
     apple: "/logo.svg",
   },
   openGraph: {
-    title: "Yong's UMK System",
-    description: "UMK systems, tools, and weekly timetable in one place.",
+    title: "𝐌𝐲𝐔𝐌𝐊 ♦︎ Your Academic Dashboard",
+    description: "Your Academic Dashboard. Made by ♥ by Yongg.",
     type: "website",
   },
 };

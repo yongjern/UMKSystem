@@ -19,7 +19,7 @@ export default function LoginPage() {
           <AuthPanel />
         </div>
       </section>
-      <p className="login-footer">MY UMK · PERSONAL OPERATIONS BOARD</p>
+      <p className="login-footer">𝐌𝐲𝐔𝐌𝐊 ♦︎ PERSONAL OPERATIONS BOARD</p>
     </main>
   );
 }

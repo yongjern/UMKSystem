@@ -4,7 +4,7 @@ import Link from "next/link";
 import { SubjectCatalog } from "@/components/subject-catalog";
 
 export const metadata: Metadata = {
-  title: "Subject Catalog · My UMK",
+  title: "𝐌𝐲𝐔𝐌𝐊 ♦︎ 📕",
   description: "Browse all available UMK subjects.",
 };
 
