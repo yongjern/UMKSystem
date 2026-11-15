@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Current MyUMK maintenance status.",
     start_url: "/",
     display: "standalone",
-    background_color: "#f2f0e9",
-    theme_color: "#f2f0e9",
+    background_color: "#000000",
+    theme_color: "#000000",
     icons: [
       {
         src: "/logo.svg",

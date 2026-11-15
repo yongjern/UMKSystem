@@ -1,13 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo, IBM_Plex_Mono } from "next/font/google";
+import { EB_Garamond, IBM_Plex_Mono, Inter, Space_Grotesk } from "next/font/google";
 import maintenance from "@/app/maintenance.json";
 import "./globals.css";
 
-const archivo = Archivo({ subsets: ["latin"], variable: "--font-sans" });
+const inter = Inter({ subsets: ["latin"], variable: "--font-body" });
+const display = Space_Grotesk({ subsets: ["latin"], variable: "--font-display" });
 const plexMono = IBM_Plex_Mono({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
   variable: "--font-mono",
+});
+const editorial = EB_Garamond({
+  subsets: ["latin"],
+  style: ["italic"],
+  variable: "--font-serif",
 });
 
 export const metadata: Metadata = {
@@ -28,13 +34,15 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f2f0e9",
+  themeColor: "#000000",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" data-type="software" data-radius="sharp" data-buttons="arrow" data-motion="on">
-      <body className={`${archivo.variable} ${plexMono.variable}`}>{children}</body>
+      <body className={`${inter.variable} ${display.variable} ${plexMono.variable} ${editorial.variable}`}>
+        {children}
+      </body>
     </html>
   );
 }

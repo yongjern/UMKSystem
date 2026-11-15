@@ -10,22 +10,36 @@ export default function MaintenancePage() {
           Skip to maintenance status
         </a>
         <a className="brand" href="#main-content" aria-label={`${maintenance.brand} maintenance home`}>
-          <span className="brand-mark" aria-hidden="true">
-            M
+          <span className="brand-mark" aria-hidden="true">M</span>
+          <span className="brand-copy">
+            <small>Academic operations</small>
+            <strong>{maintenance.brand}</strong>
           </span>
-          <span>{maintenance.brand}</span>
         </a>
-        <p className="header-reference">Ref. {maintenance.reference}</p>
+        <div className="header-status">
+          <span><i aria-hidden="true" />Maintenance active</span>
+          <p>Ref. {maintenance.reference}</p>
+        </div>
       </header>
+
+      <div className="signal-divider" aria-hidden="true" />
 
       <section className="maintenance-hero" id="maintenance-status" aria-labelledby="maintenance-title">
         <div className="maintenance-copy" data-enter>
-          <p className="status-line">
-            <span className="status-dot" aria-hidden="true" />
-            {maintenance.statusLabel}
-          </p>
+          <p className="status-line">{maintenance.statusLabel}</p>
           <h1 id="maintenance-title">{maintenance.title}</h1>
           <p className="maintenance-message">{maintenance.message}</p>
+        </div>
+
+        <div className="maintenance-panel" data-enter>
+          <div className="panel-progress" role="img" aria-label={`Maintenance is ${progress}% complete`}>
+            <span className="panel-label">System progress</span>
+            <strong>{progress}<small>%</small></strong>
+            <div className="progress-track" aria-hidden="true">
+              <span style={{ width: `${progress}%` }} />
+            </div>
+            <p>{maintenance.progressLabel}</p>
+          </div>
 
           <dl className="maintenance-times">
             <div>
@@ -42,20 +56,6 @@ export default function MaintenancePage() {
             {maintenance.contactLabel}
             <span aria-hidden="true">↗</span>
           </a>
-        </div>
-
-        <div className="maintenance-visual" role="img" aria-label={`Maintenance is ${progress}% complete`} data-enter>
-          <div className="visual-grid" aria-hidden="true" />
-          <div className="orbit orbit-one" aria-hidden="true" />
-          <div className="orbit orbit-two" aria-hidden="true" />
-          <div className="progress-dial" style={{ "--progress": `${progress * 3.6}deg` } as React.CSSProperties}>
-            <span>{progress}%</span>
-            <small>complete</small>
-          </div>
-          <div className="progress-copy">
-            <span>System status</span>
-            <strong>{maintenance.progressLabel}</strong>
-          </div>
         </div>
       </section>
 
