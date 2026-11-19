@@ -5,3 +5,5 @@
 !.env.example
 *.tsbuildinfo
 .vercel
+/.agents
+skills-lock.json

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, ArrowUpRight, Bell, BellRing, BookOpen, BusFront, CalendarDays, Check, ClipboardList, Clock3, Download, ExternalLink, FileText, GraduationCap, MapPin, MessageCircle, MoonStar, Pencil, Plus, Radio, Sparkles, Trash2, Video, Wifi } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Bell, BellRing, BookOpen, BookOpenText, BusFront, CalendarDays, Check, ClipboardList, Clock3, Download, ExternalLink, FileText, GraduationCap, MapPin, MessageCircle, MoonStar, Pencil, Plus, Radio, Sparkles, Trash2, Video, Wifi } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { type FormEvent, useEffect, useState } from "react";
@@ -123,17 +123,17 @@ function busCountdown(now: Date, departure: Date) {
 async function showNotificationTest() {
   if (typeof Notification === "undefined" || Notification.permission !== "granted") return false;
   const options: NotificationOptions = {
-    body: "歡迎使用 Yong's MYUMK 系統。MYUMK系統版本為 : v.1.06 BETA 穩定版本",
+    body: "This is a test notification from MyUMK. You can disable notifications in your browser settings.\nVersion 1.06.5",
     icon: "/logo.svg",
     tag: `umk-load-test-${Date.now()}`,
   };
   if ("serviceWorker" in navigator) {
     await navigator.serviceWorker.register("/sw.js");
     const registration = await navigator.serviceWorker.ready;
-    await registration.showNotification("My UMK 通知測試", options);
+    await registration.showNotification("Welcome Use MyUMK!", options);
     return true;
   }
-  new Notification("Yong's MY UMK 消息系統", options);
+  new Notification("Welcome Use MyUMK!", options);
   return true;
 }
 
@@ -211,7 +211,7 @@ function BusSchedule({ now, config }: { now: Date; config: DashboardConfig }) {
   return (
     <section className="bus-section" aria-labelledby="bus-title">
       <div className="section-heading bus-heading">
-        <div><span className="eyebrow">FROM KEMUMIN TO UMK KAMPUS KOTA</span><h2 id="bus-title">Kampus Kota bus</h2></div>
+        <div><span className="eyebrow">KEMUMIN ⬅➡ KAMPUS KOTA</span><h2 id="bus-title">Kampus Kota bus</h2></div>
       </div>
       <div className="bus-board">
         <div className="bus-directions">
@@ -394,7 +394,6 @@ export function Dashboard() {
     if ("Notification" in window) {
       const enabled = Notification.permission === "granted" && window.localStorage.getItem("umk-class-notifications") === "enabled";
       window.setTimeout(() => setNotificationsEnabled(enabled), 0);
-      if (Notification.permission === "granted") void showNotificationTest().catch((error) => console.error("Unable to show page-load notification", error));
     }
     if ("serviceWorker" in navigator) void navigator.serviceWorker.register("/sw.js");
     const captureInstallPrompt = (event: Event) => { event.preventDefault(); setInstallPrompt(event as InstallPromptEvent); };
@@ -458,9 +457,9 @@ export function Dashboard() {
     <main className="dashboard-shell">
       <header className="site-header"><div className="brand-lockup"><Image src="https://corporate.umk.edu.my/download/logo%20UMK%20(Menegak)_1bu43dewg9ja8.png" alt="Universiti Malaysia Kelantan" width={596} height={843} priority unoptimized /><div><span>PERSONAL OPERATIONS BOARD</span><h1>My UMK</h1></div></div><div className="live-clock" aria-label="Current date and time"><span><Radio size={12} fill="currentColor" /> LIVE</span><strong>{now ? now.toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }) : "--:--:--"}</strong><small>{now ? now.toLocaleDateString("en-MY", { weekday: "long", day: "2-digit", month: "short" }).toUpperCase() : "LOADING"}</small></div></header>
       <div className="signal-divider" aria-hidden="true" />
-      <nav className="dashboard-tools" aria-label="Dashboard tools"><Link href="/calendar"><CalendarDays size={16} /> CALENDAR</Link><Link href="/planner"><ClipboardList size={16} /> PLANNER</Link><Link href="/timetable"><Pencil size={16} /> EDIT TIMETABLE</Link><button onClick={() => void enableNotifications()} className={notificationsEnabled ? "active" : ""}>{notificationsEnabled ? <BellRing size={16} /> : <Bell size={16} />} {notificationsEnabled ? "REMINDERS ON" : "CLASS REMINDERS"}</button>{installPrompt ? <button onClick={() => void installApp()}><Download size={16} /> INSTALL APP</button> : null}<AccountButton /></nav>
+      <nav className="dashboard-tools" aria-label="Dashboard tools"><Link href="/calendar"><CalendarDays size={16} /> CALENDAR</Link><Link href="/planner"><ClipboardList size={16} /> PLANNER</Link><Link href="/subjects"><BookOpenText size={16} /> SUBJECTS</Link><Link href="/timetable"><Pencil size={16} /> EDIT TIMETABLE</Link><button onClick={() => void enableNotifications()} className={notificationsEnabled ? "active" : ""}>{notificationsEnabled ? <BellRing size={16} /> : <Bell size={16} />} {notificationsEnabled ? "REMINDERS ON" : "CLASS REMINDERS"}</button>{installPrompt ? <button onClick={() => void installApp()}><Download size={16} /> INSTALL APP</button> : null}<AccountButton /></nav>
       {configError ? <p className="data-error" role="alert">{configError}</p> : null}
-      {showGoodNight ? <section className="next-class good-night" aria-labelledby="next-title"><div className="night-icon"><MoonStar size={38} /></div><div className="next-main"><h2 id="next-title">晚安，明天見。</h2></div></section> : <section className="next-class" aria-labelledby="next-title"><div className="next-status"><span className="eyebrow"><Clock3 size={14} /> NEXT ON SCHEDULE</span><strong>{now && next ? countdownLabel(now, next.start, next.end) : "CALCULATING"}</strong></div><div className="next-main"><span className="day-number">{next ? next.start.getDate().toString().padStart(2, "0") : "--"}</span><div><h2 id="next-title">{next?.session.code ?? (config ? "No schedule" : "Loading schedule")}</h2><p>{next ? `${next.session.type} · Group ${next.session.group}` : "Semester September · Session 2026/2027"}</p></div></div><div className="next-meta"><span><Clock3 size={15} /> {next ? `${formatHour(next.session.start)}—${formatHour(next.session.end)}` : "--:--"}</span><span><MapPin size={15} /> {next?.session.mode ?? "Checking"}</span>{next && (nextMeetLink || nextCourseLink) ? <div className="next-actions">{nextMeetLink ? <a className="meet-action" href={nextMeetLink} target="_blank" rel="noreferrer" aria-label={`Join ${next.session.code} Google Meet`}><Video size={15} /> JOIN MEET</a> : null}{nextCourseLink ? <a href={nextCourseLink} target="_blank" rel="noreferrer" aria-label={`Open ${next.session.code} on e-Campus`}><ExternalLink size={15} /> E-CAMPUS</a> : null}</div> : null}</div></section>}
+      {showGoodNight ? <section className="next-class good-night" aria-labelledby="next-title"><div className="night-icon"><MoonStar size={38} /></div><div className="next-main"><h2 id="next-title">Good Night (￣o￣) . z Z</h2></div></section> : <section className="next-class" aria-labelledby="next-title"><div className="next-status"><span className="eyebrow"><Clock3 size={14} /> NEXT ON SCHEDULE</span><strong>{now && next ? countdownLabel(now, next.start, next.end) : "CALCULATING"}</strong></div><div className="next-main"><span className="day-number">{next ? next.start.getDate().toString().padStart(2, "0") : "--"}</span><div><h2 id="next-title">{next?.session.code ?? (config ? "No schedule" : "Loading schedule")}</h2><p>{next ? `${next.session.type} · Group ${next.session.group}` : "Semester September · Session 2026/2027"}</p></div></div><div className="next-meta"><span><Clock3 size={15} /> {next ? `${formatHour(next.session.start)}—${formatHour(next.session.end)}` : "--:--"}</span><span><MapPin size={15} /> {next?.session.mode ?? "Checking"}</span>{next && (nextMeetLink || nextCourseLink) ? <div className="next-actions">{nextMeetLink ? <a className="meet-action" href={nextMeetLink} target="_blank" rel="noreferrer" aria-label={`Join ${next.session.code} Google Meet`}><Video size={15} /> JOIN MEET</a> : null}{nextCourseLink ? <a href={nextCourseLink} target="_blank" rel="noreferrer" aria-label={`Open ${next.session.code} on e-Campus`}><ExternalLink size={15} /> E-CAMPUS</a> : null}</div> : null}</div></section>}
       <div className="schedule-layout"><section className="timetable-section" aria-labelledby="timetable-title"><div className="section-heading"><div><span className="eyebrow">SEMESTER SEPTEMBER · 2026/2027</span><h2 id="timetable-title">Weekly timetable</h2></div><div className="legend"><span className="lecture-dot">LECTURE</span><span className="tutorial-dot">TUTORIAL</span></div></div>{now && config ? <Timetable now={now} config={config} /> : null}</section>{now && config ? <Agenda now={now} config={config} /> : null}</div>
       {now && config ? <BusSchedule now={now} config={config} /> : null}
       {config ? <section className="links-section" aria-labelledby="links-title"><div className="section-heading"><div><span className="eyebrow">DIRECTORY / {config.quickLinks.length} DESTINATIONS</span><h2 id="links-title">Quick access</h2></div><p>Essential campus systems and everyday tools.</p></div><h3>Campus systems</h3><div className="links-grid">{config.quickLinks.filter((link) => link.category === "campus").map((link) => <QuickLinkCard link={link} key={link.name} />)}</div><h3>Everyday tools</h3><div className="links-grid tools-grid">{config.quickLinks.filter((link) => link.category === "tools").map((link) => <QuickLinkCard link={link} key={link.name} />)}</div></section> : null}

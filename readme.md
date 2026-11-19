@@ -5,6 +5,10 @@ This is a highly-customise project. So, please FORK if you want use this system.
 If you can't make it, just use AI tools to change it.
 
 ## 更新了什麼 / What's Updated
+### v1.06.01 - 05
+- 增加 Calander 視角，可以更好排版自己的時間
+- 增加登錄系統，現在可以直接登錄網站更改自己的 Course 了。
+- 一些小補丁
 
 ### v1.06（目前版本）
 - 整合並統一最新的 Beta 更新內容，版本資訊會在通知中顯示。

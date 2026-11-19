@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "MyUMK",
-    short_name: "MyUMK",
+    name: "𝐌𝐲𝐔𝐌𝐊 ♦︎ Your Academic Helper",
+    short_name: "𝐌𝐲𝐔𝐌𝐊 ♦︎ Your Academic Helper",
     description: "UMK classes, deadlines, buses, and campus tools in one place.",
     start_url: "/",
     display: "standalone",

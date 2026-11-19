@@ -5,11 +5,23 @@ import Link from "next/link";
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { AccountButton } from "@/components/account-button";
 import { dayNames, type ClassSession, type SessionType } from "@/data/schedule";
+import subjects from "@/data/subjects.json";
 import { useAuth } from "@/lib/auth-context";
 import { getDashboardConfig, type DashboardConfig } from "@/lib/dashboard-data";
 import { deleteClassSession, initializePersonalTimetable, saveClassSession } from "@/lib/event-database";
 
 const emptySession: ClassSession = { day: 1, start: 8, end: 10, code: "", group: "", type: "Lecture", mode: "" };
+
+function formatHour(hour: number) {
+  const hours = Math.floor(hour);
+  const minutes = Math.round((hour - hours) * 60);
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}
+
+function parseHour(value: string) {
+  const [hours, minutes] = value.split(":").map(Number);
+  return hours + minutes / 60;
+}
 
 export function TimetableEditor() {
   const { session, loading: authLoading } = useAuth();
@@ -24,7 +36,7 @@ export function TimetableEditor() {
     try {
       const nextConfig = await getDashboardConfig(userId);
       setConfig(nextConfig);
-      setDraft((current) => ({ ...current, code: current.code || nextConfig.courses[0]?.code || "" }));
+      setDraft((current) => ({ ...current, code: current.code || subjects[0]?.code || "" }));
       setError("");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to load timetable.");
@@ -52,7 +64,7 @@ export function TimetableEditor() {
     setSaving(true);
     try {
       await saveClassSession(draft, userId);
-      setDraft({ ...emptySession, code: config?.courses[0]?.code ?? "" });
+      setDraft({ ...emptySession, code: subjects[0]?.code ?? "" });
       await load();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to save class.");
@@ -65,7 +77,7 @@ export function TimetableEditor() {
     if (!userId || !item.id) return;
     try {
       await deleteClassSession(item.id, userId);
-      if (draft.id === item.id) setDraft({ ...emptySession, code: config?.courses[0]?.code ?? "" });
+      if (draft.id === item.id) setDraft({ ...emptySession, code: subjects[0]?.code ?? "" });
       await load();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to delete class.");
@@ -85,15 +97,15 @@ export function TimetableEditor() {
         <form className="timetable-form" onSubmit={(event) => void submit(event)}>
           <div><span className="eyebrow">{draft.id ? "EDIT CLASS" : "NEW CLASS"}</span><h2>{draft.id ? "Update this session" : "Add to your week"}</h2></div>
           <label><span>DAY</span><select value={draft.day} onChange={(event) => setDraft({ ...draft, day: Number(event.target.value) as ClassSession["day"] })}>{dayNames.map((day, index) => <option value={index} key={day}>{day}</option>)}</select></label>
-          <label><span>COURSE</span><select value={draft.code} onChange={(event) => setDraft({ ...draft, code: event.target.value })}>{config.courses.map((course) => <option value={course.code} key={course.code}>{course.code} · {course.name}</option>)}</select></label>
-          <label><span>START HOUR</span><input type="number" min="0" max="23.5" step="0.5" value={draft.start} onChange={(event) => setDraft({ ...draft, start: Number(event.target.value) })} /></label>
-          <label><span>END HOUR</span><input type="number" min="0.5" max="24" step="0.5" value={draft.end} onChange={(event) => setDraft({ ...draft, end: Number(event.target.value) })} /></label>
+          <label><span>SUBJECT</span><select value={draft.code} onChange={(event) => setDraft({ ...draft, code: event.target.value })}>{subjects.slice(0, 10).map((subject) => <option value={subject.code} key={subject.code}>{subject.code} · {subject.name}</option>)}</select></label>
+          <label><span>START HOUR</span><input type="time" step="1800" value={formatHour(draft.start)} onChange={(event) => setDraft({ ...draft, start: parseHour(event.target.value) })} required /></label>
+          <label><span>END HOUR</span><input type="time" step="1800" value={formatHour(draft.end)} onChange={(event) => setDraft({ ...draft, end: parseHour(event.target.value) })} required /></label>
           <label><span>TYPE</span><select value={draft.type} onChange={(event) => setDraft({ ...draft, type: event.target.value as SessionType })}><option>Lecture</option><option>Tutorial</option></select></label>
           <label><span>GROUP</span><input value={draft.group} onChange={(event) => setDraft({ ...draft, group: event.target.value })} required /></label>
           <label><span>LOCATION / MODE</span><input value={draft.mode} onChange={(event) => setDraft({ ...draft, mode: event.target.value })} required /></label>
-          <div className="editor-actions"><button type="submit" disabled={saving}><Plus size={16} /> {draft.id ? "SAVE CHANGES" : "ADD CLASS"}</button>{draft.id ? <button type="button" className="secondary" onClick={() => setDraft({ ...emptySession, code: config.courses[0]?.code ?? "" })}>CANCEL</button> : null}</div>
+          <div className="editor-actions"><button type="submit" disabled={saving}><Plus size={16} /> {draft.id ? "SAVE CHANGES" : "ADD CLASS"}</button>{draft.id ? <button type="button" className="secondary" onClick={() => setDraft({ ...emptySession, code: subjects[0]?.code ?? "" })}>CANCEL</button> : null}</div>
         </form>
-        <section className="session-list"><div><span className="eyebrow">YOUR WEEK</span><h2>{config.classSchedule.length} class sessions</h2></div>{config.classSchedule.length ? config.classSchedule.map((item) => <article key={item.id}><time>{dayNames[item.day]}<strong>{String(item.start).padStart(2, "0")}:00—{String(item.end).padStart(2, "0")}:00</strong></time><span><strong>{item.code}</strong><small>{item.type} · {item.group} · {item.mode}</small></span><button onClick={() => setDraft(item)} aria-label={`Edit ${item.code}`}><Pencil size={15} /></button><button onClick={() => void remove(item)} aria-label={`Delete ${item.code}`}><Trash2 size={15} /></button></article>) : <p>No classes yet.</p>}</section>
+        <section className="session-list"><div><span className="eyebrow">YOUR WEEK</span><h2>{config.classSchedule.length} class sessions</h2></div>{config.classSchedule.length ? config.classSchedule.map((item) => { const creditHours = item.end - item.start; return <article key={item.id}><time>{dayNames[item.day]}<strong>{formatHour(item.start)}—{formatHour(item.end)}</strong></time><strong className="credit-hours"><span>{creditHours}</span><small>CH</small></strong><span><strong>{item.code}</strong><small>{item.type} · {item.group} · {item.mode}</small></span><button onClick={() => setDraft(item)} aria-label={`Edit ${item.code}`}><Pencil size={15} /></button><button onClick={() => void remove(item)} aria-label={`Delete ${item.code}`}><Trash2 size={15} /></button></article>; }) : <p>No classes yet.</p>}</section>
       </div> : null}
       {error ? <p className="data-error" role="alert">{error}</p> : null}
     </main>
